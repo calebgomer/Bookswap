@@ -1,0 +1,8 @@
+extends layout
+block content
+  each book in books
+    .book
+      .name #{book.name}
+      .author #{book.author}
+      .isbn #{book.isbn}
+      .soldBy #{book.email}

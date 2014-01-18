@@ -1,0 +1,46 @@
+extends layout
+block content
+  form(action='/join', method='post', onsubmit='return validateForm();')
+    input(type='hidden', name='_csrf', value=csrfToken)
+    label(for='name') Name
+    input(type='name', name='name', id='name')
+    br
+    label(for='schoolId') School
+    input(type='schoolId', name='schoolId', id='schoolId')
+    br
+    label(for='email') Email
+    input(type='email', name='email', id='email')
+    br
+    label(for='password') Password
+    input(type='password', name='password', id='password')
+    br
+    label(for='password') Confirm Password
+    input(type='password', name='password2', id='password2')
+    br
+    input(type='submit', name='submit', value='Join')
+  script(type='text/javascript').
+    function validateForm() {
+      if (!document.getElementById('name').value) {
+        showError('Please enter your name');
+        return false;
+      }
+      if (!document.getElementById('schoolId').value) {
+        showError('Please choose your school');
+        return false;
+      }
+      var email = document.getElementById('email').value;
+      if (!email || email.length <= 4 || email.indexOf('@') === -1 || email.indexOf(".edu", email.length - 4) === -1) {
+        showError('Please enter a valid university email');
+        return false;
+      }
+      var password = document.getElementById('password').value;
+      var password2 = document.getElementById('password2').value;
+      if (!password || !password2 || password.length < 8 || password !== password2) {
+        showError('Please make sure your passwords match and are at least 8 characters');
+        return false;
+      }
+      return true;
+    }
+    function showError(message) {
+      document.getElementById('error').innerHTML = message;
+    }

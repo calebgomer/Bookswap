@@ -1,0 +1,26 @@
+{
+  "name": "Bookswap",
+  "description": "An app for trading textbooks and saving money",
+  "version": "0.0.1",
+  "repository": "https://github.com/calebgomer/Bookswap",
+  "readme": "https://raw.github.com/calebgomer/Bookswap/master/README.md",
+  "scripts": {
+    "start": "node server/app.js"
+  },
+  "dependencies": {
+    "express": "3.4.8",
+    "jade": "1.1.4",
+    "passport": "0.1.18",
+    "passport-local": "0.1.6",
+    "pg": "2.11.0",
+    "node-uuid": "1.4.1",
+    "underscore": "1.5.2",
+    "async": "0.2.9",
+    "validator": "3.1.0",
+    "buffertools": "2.0.1"
+  },
+  "engines": {
+    "node": "0.10.x",
+    "npm": "1.2.x"
+  }
+}

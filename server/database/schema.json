@@ -1,0 +1,89 @@
+{
+  "types": [
+    {
+      "name": "bookOwnership",
+      "enum": true,
+      "values": [
+        "own",
+        "selling",
+        "buying"
+      ]
+    }
+  ],
+  "tables": [
+    {
+      "name": "schools",
+      "fields": [
+        {
+          "name": "schoolId",
+          "type": "varchar(36)",
+          "primary": true
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "textBookLookupUrl",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "students",
+      "fields": [
+        {
+          "name": "email",
+          "type": "text",
+          "primary": true
+        },
+        {
+          "name": "password",
+          "type": "text"
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "null": true
+        },
+        {
+          "name": "schoolId",
+          "type": "varchar(36)",
+          "references": "schools",
+          "ondelete": "set null",
+          "null": true
+        },
+        {
+          "name": "emailConfirmed",
+          "type": "boolean",
+          "default": false
+        }
+      ]
+    },
+    {
+      "name": "bookList",
+      "fields": [
+        {
+          "name": "email",
+          "type": "text",
+          "references": "students",
+          "ondelete": "cascade"
+        },
+        {
+          "name": "isbn",
+          "type": "varchar(13)"
+        },
+        {
+          "name": "ownership",
+          "type": "bookOwnership"
+        }
+      ],
+      "compositePrimaryKeys": [
+        "email",
+        "isbn"
+      ]
+    }
+  ],
+  "extensions": [
+  ]
+}

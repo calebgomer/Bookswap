@@ -1,0 +1,25 @@
+extends layout
+block content
+  .userNamesBooks #{user.name}'s books
+  each book in books
+    .book
+      .name #{book.name}
+      .author #{book.author}
+      span.isbn #{book.isbn}
+      if book.ownership === 'own'
+        span.status [own]
+      else if book.ownership === 'selling'
+        span.status [selling]
+      else if book.ownership === 'buying'
+        span.status [buying]
+  .addBook
+    form(action='/my/books', method='post', onsubmit='return document.getElementById("newBookIsbn").value ? true : false;')
+      input(type='hidden', name='_csrf', value=csrfToken)
+      input(type='hidden', name='action', value='addBook')
+      input(type='text', name='newBookIsbn', id='newBookIsbn')
+      select(name='newBookOwnership')
+        option(value='own') Own
+        option(value='selling') Selling
+        option(value='buying') Buying
+      br
+      input(type='submit', name='submit', value='Add Book')
