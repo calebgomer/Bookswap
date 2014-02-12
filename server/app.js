@@ -5,11 +5,18 @@ var express = require('express');
 var app = express();
 var path = require('path');
 var controller = require('./controller');
+var util = require('util');
 
 // user authentication
 var passport = require('passport');
 var LocalLoginStrategy = require('passport-local').Strategy;
 var myUtils = require('./myUtils');
+
+var Mandrill = require('mandrill-api/mandrill');
+var m = new Mandrill.Mandrill();
+m.users.info(function(info) {
+    console.log('Reputation: ' + info.reputation + ', Hourly Quota: ' + info.hourly_quota);
+});
 
 app.configure(function() {
   app.set('views', __dirname + '/views');
@@ -54,22 +61,25 @@ if (process.env.HEROKU || process.env.NODE_ENV === 'development') {
 }
 
 app.get('/', function(req, res) {
-  console.log('csrf',req.csrfToken());
-  var user = req.user;
-  if (user) {
-    user.csrf = req.csrfToken();
-  }
-  res.json(user || { 'message': 'Hello random person'});
+  res.render('home');
 });
 
-app.get('/account/:email/:password', controller.getAccount);
+app.get('/account', controller.getAccount);
 app.get('/join', controller.join);
 app.post('/join', controller.createAccount);
+app.get('/confirm/:confirmationId', controller.confirmEmail);
 app.get('/login', controller.login);
-app.post('/login', passport.authenticate('local', {successRedirect:'/', failureRedirect:'/login' }));
-app.get('/my/books', loggedIn, controller.myBooks);
-app.post('/my/books', loggedIn, controller.addBooks);
-app.get('/find/books', loggedIn, controller.findBooks);
+app.get('/login/:destination', controller.login);
+app.post('/login', function(req, res) {
+  passport.authenticate('local', {successRedirect:req.body.destination||'/', failureRedirect:'/login' })(req, res);
+});
+app.get('/logout', function(req, res){
+  req.logout();
+  res.redirect('/');
+});
+app.get('/mybooks', loggedIn, controller.myBooks);
+app.post('/mybooks', loggedIn, controller.addBooks);
+app.get('/findbooks', loggedIn, controller.findBooks);
 
 // setup passport
 passport.use(new LocalLoginStrategy({usernameField:'email'},
@@ -108,6 +118,6 @@ function loggedIn(req, res, next) {
   if (req.user) {
     next();
   } else {
-    res.redirect('/login');
+    res.redirect(util.format('/login%s', req._parsedUrl.path));
   }
 }

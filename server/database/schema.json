@@ -16,7 +16,7 @@
       "fields": [
         {
           "name": "schoolId",
-          "type": "varchar(36)",
+          "type": "text",
           "primary": true
         },
         {
@@ -51,6 +51,11 @@
           "type": "varchar(36)",
           "references": "schools",
           "ondelete": "set null",
+          "null": true
+        },
+        {
+          "name": "emailConfirmationId",
+          "type": "varchar(36)",
           "null": true
         },
         {

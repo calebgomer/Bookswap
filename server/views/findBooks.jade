@@ -1,8 +1,13 @@
 extends layout
 block content
-  each book in books
-    .book
-      .name #{book.name}
-      .author #{book.author}
-      .isbn #{book.isbn}
-      .soldBy #{book.email}
+  p Find Books
+  if books.length
+    each book in books
+      .book
+        .name #{book.name}
+        .author #{book.author}
+        .isbn #{book.isbn}
+        .soldBy 
+          a(href='mailto:#{book.email}') #{book.seller}
+  else
+    p We couldn't find any books right now. Here are some online purchasing options.

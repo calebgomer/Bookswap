@@ -7,6 +7,16 @@ html
     meta(name='description', content='A site for trading textbooks')  
     meta(name='keywords', content='book, books, textbook, textbooks, college, university, trade, swap, bookswap, swapbook, swapbooks, cheap')
     link(rel='stylesheet', href='/stylesheets/styles.css')
+    link(href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css", rel="stylesheet")
   body
+    ul.nav
+      li
+        a(href='/') home
+      li
+        a(href='/mybooks') my books
+      li
+        a(href='/findbooks') find books
     #error.error #{error}
     block content
+  script(src="//code.jquery.com/jquery-2.1.0.min.js")
+  script(src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js")

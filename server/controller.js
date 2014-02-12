@@ -2,6 +2,8 @@ var validator = require('validator');
 var myUtils = require('./myUtils');
 var util = require('util');
 var crypto = require('crypto');
+var accountHelper = require('./accountHelper');
+var emailHelper = require('./emailHelper');
 require('buffertools').extend();
 
 function join(req, res) {
@@ -16,6 +18,7 @@ function createAccount(req, res) {
   if (email.indexOf(".edu", email.length - 4) == -1) {
     return res.render('join', {error: 'You must use a .edu email'});
   }
+  var schoolId = email.substring(email.indexOf('@')+1);
   if (!password || password.length < 8) {
     return res.render('join', {error: 'You must use a password with at least 8 charaters'});
   }
@@ -27,20 +30,26 @@ function createAccount(req, res) {
       console.error('error hashing new password', err);
       return res.render('join', {error: 'Our site is having an issue, please try again'});
     }
-    console.log('hashNewPassword',result);
     var passwordStuff = result;// JSON.stringify(result);
     myUtils.getDbClient(function(err) {
       return res.render('join', {error: 'Our site is having an issue, please try again'});
     }, function(client, done) {
-      var insertQuery = 'insert into students (email, password, name, schoolId) values ($1, $2, $3, $4)';
-      client.query(insertQuery, [email, passwordStuff, name, schoolId], function(err, result) {
+      var confirmationId = myUtils.newUUID();
+      var insertQuery = 'insert into students (email, password, name, schoolId, emailConfirmationId) values ($1, $2, $3, $4, $5)';
+      client.query(insertQuery, [email, passwordStuff, name, schoolId, confirmationId], function(err, result) {
         done();
         if (err) {
-          console.error('problem inserting new user', err);
-          res.render('join', {error: 'Our site is having an issue, please try again'});
+          if (err.code === '23505') {
+            console.log('user exists');
+            res.render('join', {error: 'Sorry, an account with this email already exists.'});
+          } else {
+            console.error('problem inserting new user', err);
+            res.render('join', {error: 'Our site is having an issue, please try again.'});
+          }
         } else {
           console.log('added new user', result);
-          res.redirect('/my/books');
+          emailHelper.sendNewEmailConfirmation({name: name, email: email, confirmationId: confirmationId});
+          res.render('joinSuccess', {name: name, email: email});
         }
       });
     });
@@ -116,18 +125,26 @@ function hashPasswordWithIterationsAndKeylen(password, salt, iterations, keylen,
   });
 }
 
-function getAccount(req, res) {
-  var email = req.params.email;
-  var password = req.params.password;
-
-  myUtils.getDbClient(function(err) {
-    res.send('Sorry, we\'re having some problems with the website right now. Please try again soon.');
-  }, function(client, done) {
-    client.query('get ')
+function confirmEmail(req, res) {
+  var confirmationId = req.params.confirmationId;
+  console.log(confirmationId);
+  accountHelper.confirmEmail(confirmationId, function(err, result) {
+    console.log(err);
+    if (err) {
+      res.json(err);
+    } else {
+      res.json(result);
+    }
   });
 }
 
+function getAccount(req, res) {
+  var email = req.user.email;
+  res.json(req.user);
+}
+
 function login(req, res) {
+  res.locals.destination = req.params.destination;
   res.render('login');
 }
 
@@ -174,7 +191,7 @@ function addBooks(req, res) {
           console.error('problem adding new book', err);
           res.send('That didn\'t quite work. Make sure you haven\'t already added that book to your list');
         } else {
-          res.redirect('/my/books');
+          res.redirect('/mybooks');
         }
       });
     });
@@ -182,14 +199,15 @@ function addBooks(req, res) {
 }
 
 function findBooks(req, res) {
+  console.log('school id', req.user.schoolid);
   myUtils.getDbClient(function(err) {
     res.render('findBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
   }, function(client, done) {
-    client.query('select email,isbn from bookList where isbn in (select isbn from bookList where email = $1 and ownership = \'buying\') and ownership = \'selling\'', [req.user.email], function(err, result) {
+    client.query('select bookList.email,isbn,name as seller from bookList,students where bookList.email = students.email and schoolId = $2 and emailConfirmed and isbn in (select isbn from bookList,students where students.email = bookList.email and bookList.email = $1 and ownership = \'buying\' and emailConfirmed) and ownership = \'selling\'', [req.user.email, req.user.schoolid], function(err, result) {
       done();
       if (err) {
         console.log('error finding books', err);
-        res.render('findBooks', {error:'Sorry, we are having trouble matching books for you. Please try again soon.'});
+        res.render('findBooks', {books: [], error:'Sorry, we are having trouble matching books for you. Please try again soon.'});
       } else {
         console.log(result);
         res.render('findBooks', {books:result.rows});
@@ -201,6 +219,7 @@ function findBooks(req, res) {
 module.exports.getAccount = getAccount;
 module.exports.login = login;
 module.exports.join = join;
+module.exports.confirmEmail = confirmEmail;
 module.exports.createAccount = createAccount;
 module.exports.authenticateUser = authenticateUser;
 module.exports.myBooks = myBooks;

@@ -5,9 +5,6 @@ block content
     label(for='name') Name
     input(type='name', name='name', id='name')
     br
-    label(for='schoolId') School
-    input(type='schoolId', name='schoolId', id='schoolId')
-    br
     label(for='email') Email
     input(type='email', name='email', id='email')
     br
@@ -22,10 +19,6 @@ block content
     function validateForm() {
       if (!document.getElementById('name').value) {
         showError('Please enter your name');
-        return false;
-      }
-      if (!document.getElementById('schoolId').value) {
-        showError('Please choose your school');
         return false;
       }
       var email = document.getElementById('email').value;
