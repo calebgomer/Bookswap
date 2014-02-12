@@ -21,6 +21,9 @@ function insertFakeSchools(callback) {
       },
       function(callback) {
         client.query(insertQuery, ['school3id', 'School 3', 'http://gvsu.verbacompare.com/'], callback);
+      },
+      function(callback) {
+        client.query(insertQuery, ['mail.gvsu.edu', 'Grand Valley State University', 'http://gvsu.verbacompare.com/'], callback);
       }
     ], allDone);
   });
