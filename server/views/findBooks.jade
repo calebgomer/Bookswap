@@ -4,10 +4,9 @@ block content
   if books.length
     each book in books
       .book
-        .name #{book.name}
-        .author #{book.author}
-        .isbn #{book.isbn}
         .soldBy 
           a(href='mailto:#{book.email}') #{book.seller}
+          | &nbsp;has these books for you 
+        .isbn #{book.isbn}
   else
     p We couldn't find any books right now. Here are some online purchasing options.

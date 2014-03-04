@@ -1,8 +1,8 @@
 doctype html 5
-html
+html(lang='en')
   head
     title= title
-    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    meta(name='viewport', content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
     meta(name='title', content='Bookswap')
     meta(name='description', content='A site for trading textbooks')  
     meta(name='keywords', content='book, books, textbook, textbooks, college, university, trade, swap, bookswap, swapbook, swapbooks, cheap')
@@ -12,11 +12,20 @@ html
     ul.nav
       li
         a(href='/') home
-      li
-        a(href='/mybooks') my books
-      li
-        a(href='/findbooks') find books
+      if user
+        li
+          a(href='/mybooks') my books
+        li
+          a(href='/findbooks') find books
+        li
+          a(href='/logout') logout
+      else
+        li
+          a(href='/join') join
+        li
+          a(href='/login') login
     #error.error #{error}
-    block content
+    .container
+      block content
   script(src="//code.jquery.com/jquery-2.1.0.min.js")
   script(src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js")

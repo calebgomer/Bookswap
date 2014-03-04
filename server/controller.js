@@ -156,7 +156,7 @@ function myBooks(req, res) {
     client.query('select * from bookList where email = $1', [email], function(err, result) {
       done();
       if (err) {
-        res.render('myBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
+        res.render('myBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.', books: new Array()});
       } else {
         res.render('myBooks', {books:result.rows});
       }
@@ -166,8 +166,8 @@ function myBooks(req, res) {
 
 function addBooks(req, res) {
   var action = req.body.action;
+  var isbn = req.body.isbn;
   if (action === 'addBook') {
-    var isbn = req.body.newBookIsbn;
     var ownership = req.body.newBookOwnership;
     if (!validator.isISBN(isbn, 13)) {
       if (validator.isISBN(isbn, 10)) {
@@ -176,7 +176,8 @@ function addBooks(req, res) {
         isbn = util.format("978%s%d", isbn.substring(0, 9), checkDig);
         console.log('fixed isbn',isbn);
       } else {
-        return res.send('not a valid isbn');
+        res.locals.error = 'Sorry, that is not a valid ISBN. Please provide an ISBN 10 or 13 number.';
+        return myBooks(req, res);
       }
     }
     if (!(ownership === 'own' || ownership === 'selling' || ownership === 'buying')) {
@@ -189,10 +190,38 @@ function addBooks(req, res) {
         done();
         if (err) {
           console.error('problem adding new book', err);
-          res.send('That didn\'t quite work. Make sure you haven\'t already added that book to your list');
-        } else {
-          res.redirect('/mybooks');
+          res.locals.error = 'That didn\'t quite work. Make sure you haven\'t already added that book to your list';
         }
+        myBooks(req, res);
+      });
+    });
+  } else if (action === 'modifyBook') {
+    var ownership = req.body.ownedBookStatus;
+    myUtils.getDbClient(function(err) {
+      res.locals.error = 'Sorry, we couldn\'t update that book. Please try again.';
+      return myBooks(req, res);
+    }, function(client, done) {
+      client.query('update bookList set ownership=$1 where email=$2 and isbn=$3', [ownership, req.user.email, isbn], function(err, result) {
+        done();
+        if (err) {
+          console.error('problem updating book', err);
+          res.locals.error = 'Sorry, we couldn\'t update that book. Please try again.';
+        }
+        myBooks(req, res);
+      });
+    });
+  } else if (action === 'removeBook') {
+    myUtils.getDbClient(function(err) {
+      res.locals.error = 'Sorry, we couldn\'t remove that book. Please try again';
+      return myBooks(req, res);
+    }, function(client, done) {
+      client.query('delete from bookList where email=$1 and isbn=$2', [req.user.email, isbn], function(err, result) {
+        done();
+        if (err) {
+          console.error('problem removing book', err);
+          res.locals.error = 'Sorry, we couldn\'t remove that book. Please try again';
+        }
+        myBooks(req, res);
       });
     });
   }

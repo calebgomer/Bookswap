@@ -1,12 +1,16 @@
 extends layout
 block content
-  form(action='/login', method='post')
+  form(action='/login', method='post', role='form')
     input(type='hidden', name='_csrf', value=csrfToken)
     input(type='hidden', name='destination', value=destination)
-    label(for='email') Email
-    input(type='email', name='email')
+    .form-group
+      label.col-sm-2.control-label(for='email') Email
+      .col-sm-10
+          input.form-control(type='email', name='email')
     br
-    label(for='password') Password
-    input(type='password', name='password')
+    .form-group
+      label.col-sm-2.control-label(for='password') Password
+      .col-sm-10
+          input.form-control(type='password', name='password')
     br
-    input(type='submit', name='submit', value='Login')
+    button.btn.btn-default(type='submit', name='submit') Login

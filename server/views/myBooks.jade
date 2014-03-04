@@ -1,27 +1,53 @@
 extends layout
 block content
   .userNamesBooks Your Books
-  each book in books
-    .book
-      .name #{book.name}
-      .author #{book.author}
-      span.isbn #{book.isbn}
-      if book.ownership === 'own'
-        span.status [own]
-      else if book.ownership === 'selling'
-        span.status [selling]
-      else if book.ownership === 'buying'
-        span.status [buying]
+  if books && books.length
+    each book in books
+      .book
+        .name #{book.name}
+        .author #{book.author}
+        span.isbn.col-sm-2 #{book.isbn}
+        span.status.col-sm-10
+          form(action='/mybooks', role='form', method='post')
+            input(type='hidden', name='_csrf', value=csrfToken)
+            input(type='hidden', name='action', value='modifyBook')
+            input(type='hidden', name='isbn', value=book.isbn)
+            select.form-control.col-sm-2(name='ownedBookStatus', onchange='this.form.submit();')
+              if book.ownership === 'own'
+                option(selected, value='own') Own
+              else
+                option(value='own') Own
+              if book.ownership === 'selling'
+                option(selected, value='selling') Selling
+              else
+                option(value='selling') Selling
+              if book.ownership === 'buying'
+                option(selected, value='buying') Buying
+              else
+                option(value='buying') Buying
+          form(action='/mybooks', role='form', method='post')
+            input(type='hidden', name='_csrf', value=csrfToken)
+            input(type='hidden', name='action', value='removeBook')
+            input(type='hidden', name='isbn', value=book.isbn)
+            button.btn.btn-default(type='submit', name='Remove') Remove
+  else
+    h3 You don't have any books yet. Please add a book below!
   br
   .addBook
     p Add a book  
-    form(action='/mybooks', method='post', onsubmit='return document.getElementById("newBookIsbn").value ? true : false;')
+    form(action='/mybooks', role='form', method='post', onsubmit='return document.getElementById("newBookIsbn").value ? true : false;')
       input(type='hidden', name='_csrf', value=csrfToken)
       input(type='hidden', name='action', value='addBook')
-      input(type='text', name='newBookIsbn', id='newBookIsbn')
-      select(name='newBookOwnership')
-        option(value='own') Own
-        option(value='selling') Selling
-        option(value='buying') Buying
+      .form-group
+        label.col-sm-2.control-label Book ISBN
+        .col-sm-10
+          input.form-control(type='text', name='isbn', id='newBookIsbn')
+      .form-group
+        label.col-sm-2.control-label Ownership
+        .col-sm-10
+          select.form-control(name='newBookOwnership')
+            option(value='own') I own this book
+            option(value='selling') I am selling this book
+            option(value='buying') I am buying this book
       br
-      input(type='submit', name='submit', value='Add Book')
+      button.btn.btn-default(type='submit', name='submit') Add Book

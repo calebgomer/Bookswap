@@ -2,19 +2,27 @@ extends layout
 block content
   form(action='/join', method='post', onsubmit='return validateForm();')
     input(type='hidden', name='_csrf', value=csrfToken)
-    label(for='name') Name
-    input(type='name', name='name', id='name')
+    .form-group
+      label.col-sm-2.control-label(for='name') Name
+      .col-sm-10
+        input.form-control(type='name', name='name', id='name')
     br
-    label(for='email') Email
-    input(type='email', name='email', id='email')
+    .form-group
+      label.col-sm-2.control-label(for='email') Email
+      .col-sm-10
+        input.form-control(type='email', name='email', id='email')
     br
-    label(for='password') Password
-    input(type='password', name='password', id='password')
+    .form-group
+      label.col-sm-2.control-label(for='password') Password
+      .col-sm-10
+        input.form-control(type='password', name='password', id='password')
     br
-    label(for='password') Confirm Password
-    input(type='password', name='password2', id='password2')
+    .form-group
+      label.col-sm-2.control-label(for='password') Confirm Password
+      .col-sm-10
+        input.form-control(type='password', name='password2', id='password2')
     br
-    input(type='submit', name='submit', value='Join')
+    input.form-control(type='submit', name='submit', value='Join')
   script(type='text/javascript').
     function validateForm() {
       if (!document.getElementById('name').value) {
