@@ -24,6 +24,9 @@ function insertFakeSchools(callback) {
       },
       function(callback) {
         client.query(insertQuery, ['mail.gvsu.edu', 'Grand Valley State University', 'http://gvsu.verbacompare.com/'], callback);
+      },
+      function(callback) {
+        client.query(insertQuery, ['vt.edu', 'Virginia Tech', 'http://epos9-phx.sequoiars.com/ePOS?this_category=1427&store=109&form=shared3%2fgm%2fmain%2ehtml&design=109'], callback);
       }
     ], allDone);
   });
