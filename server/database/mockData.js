@@ -13,18 +13,18 @@ function insertFakeSchools(callback) {
     }
     var insertQuery = 'insert into schools values ($1, $2, $3)';
     async.series([
-      // function(callback) {
-      //   client.query(insertQuery, ['school1id', 'School 1', 'http://gvsu.verbacompare.com/'], callback);
-      // },
-      // function(callback) {
-      //   client.query(insertQuery, ['school2id', 'School 2', 'http://gvsu.verbacompare.com/'], callback);
-      // },
-      // function(callback) {
-      //   client.query(insertQuery, ['school3id', 'School 3', 'http://gvsu.verbacompare.com/'], callback);
-      // },
-      // function(callback) {
-      //   client.query(insertQuery, ['mail.gvsu.edu', 'Grand Valley State University', 'http://gvsu.verbacompare.com/'], callback);
-      // },
+      function(callback) {
+        client.query(insertQuery, ['school1id', 'School 1', 'http://gvsu.verbacompare.com/'], callback);
+      },
+      function(callback) {
+        client.query(insertQuery, ['school2id', 'School 2', 'http://gvsu.verbacompare.com/'], callback);
+      },
+      function(callback) {
+        client.query(insertQuery, ['school3id', 'School 3', 'http://gvsu.verbacompare.com/'], callback);
+      },
+      function(callback) {
+        client.query(insertQuery, ['mail.gvsu.edu', 'Grand Valley State University', 'http://gvsu.verbacompare.com/'], callback);
+      },
       function(callback) {
         client.query(insertQuery, ['vt.edu', 'Virginia Tech', 'http://epos9-phx.sequoiars.com/ePOS?this_category=1427&store=109&form=shared3%2fgm%2fmain%2ehtml&design=109'], callback);
       }
