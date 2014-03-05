@@ -246,9 +246,9 @@ function getBookInfo(isbn, callback) {
           subtitle:         results[0].items && results[0].items.length && results[0].items[0].volumeInfo.subtitle || '',
           authors:          results[0].items && results[0].items.length && results[0].items[0].volumeInfo.authors && results[0].items[0].volumeInfo.authors.join(', ') || ['Anonymous'],
           image:            results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].MediumImage[0].URL[0],
-          lowestNewPrice:   results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestNewPrice && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestNewPrice[0].FormattedPrice[0],
-          lowestUsedPrice:  results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestUsedPrice && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestUsedPrice[0].FormattedPrice[0],
-          offerPage:        results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].Offers[0].MoreOffersUrl[0]
+          lowestNewPrice:   results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary && results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestNewPrice && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestNewPrice[0].FormattedPrice[0],
+          lowestUsedPrice:  results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary && results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestUsedPrice && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestUsedPrice[0].FormattedPrice[0],
+          offerPage:        results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].Offers && results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].Offers[0].MoreOffersUrl[0]
         }
         booksData.insert(book, console.log);
         callback(undefined, book);
