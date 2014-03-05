@@ -9,21 +9,29 @@ html(lang='en')
     link(rel='stylesheet', href='/stylesheets/styles.css')
     link(href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css", rel="stylesheet")
   body
-    ul.nav
-      li
-        a(href='/') home
-      if user
-        li
-          a(href='/mybooks') my books
-        li
-          a(href='/findbooks') find books
-        li
-          a(href='/logout') logout
-      else
-        li
-          a(href='/join') join
-        li
-          a(href='/login') login
+    nav.navbar.navbar-default(role='navigation')
+      .container-fluid
+        .navbar-header
+          button.navbar-toggle(type='button', data-toggle='collapse', data-target='#collapsible-navbar')
+            span.sr-only Toggle Navigation
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.navbar-brand(href='/') Book Swap
+        .collapse.navbar-collapse(id='collapsible-navbar')
+          ul.nav.navbar-nav
+            if user
+              li
+                a(href='/mybooks') My Books
+              li
+                a(href='/findbooks') Find Books
+              li
+                a(href='/logout') Logout
+            else
+              li
+                a(href='/join') Join
+              li
+                a(href='/login') Login
     #error.error #{error}
     .container
       block content

@@ -13,12 +13,14 @@
     "passport": "0.1.18",
     "passport-local": "0.1.6",
     "pg": "2.11.0",
+    "mongodb": "1.3.23",
     "node-uuid": "1.4.1",
     "underscore": "1.5.2",
     "async": "0.2.9",
     "validator": "3.1.0",
     "buffertools": "2.0.1",
-    "mandrill-api": ">=1.0.2"
+    "mandrill-api": ">=1.0.2",
+    "xml2js": "0.2.0"
   },
   "engines": {
     "node": "0.10.x",

@@ -21,11 +21,13 @@
         },
         {
           "name": "name",
-          "type": "text"
+          "type": "text",
+          "null": true
         },
         {
           "name": "textBookLookupUrl",
-          "type": "text"
+          "type": "text",
+          "null": true
         }
       ]
     },

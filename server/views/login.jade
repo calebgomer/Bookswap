@@ -1,16 +1,12 @@
 extends layout
 block content
-  form(action='/login', method='post', role='form')
+  h3 Login to Book Swap
+  br
+  form.col-sm-12.col-md-6(action='/login', method='post', role='form')
     input(type='hidden', name='_csrf', value=csrfToken)
     input(type='hidden', name='destination', value=destination)
-    .form-group
-      label.col-sm-2.control-label(for='email') Email
-      .col-sm-10
-          input.form-control(type='email', name='email')
+    input.form-control(type='email', name='email', placeholder='Email')
     br
-    .form-group
-      label.col-sm-2.control-label(for='password') Password
-      .col-sm-10
-          input.form-control(type='password', name='password')
+    input.form-control(type='password', name='password', placeholder='Password')
     br
-    button.btn.btn-default(type='submit', name='submit') Login
+    button.btn.btn-primary.form-control(type='submit', name='submit') Login

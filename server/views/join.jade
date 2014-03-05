@@ -1,28 +1,18 @@
 extends layout
 block content
-  form(action='/join', method='post', onsubmit='return validateForm();')
+  h3 Join Book Swap
+  br
+  form.col-sm-12.col-md-6(action='/join', method='post', onsubmit='return validateForm();')
     input(type='hidden', name='_csrf', value=csrfToken)
-    .form-group
-      label.col-sm-2.control-label(for='name') Name
-      .col-sm-10
-        input.form-control(type='name', name='name', id='name')
+    input.form-control(type='name', name='name', id='name', placeholder='Name')
     br
-    .form-group
-      label.col-sm-2.control-label(for='email') Email
-      .col-sm-10
-        input.form-control(type='email', name='email', id='email')
+    input.form-control(type='email', name='email', id='email', placeholder='College/University Email')
     br
-    .form-group
-      label.col-sm-2.control-label(for='password') Password
-      .col-sm-10
-        input.form-control(type='password', name='password', id='password')
+    input.form-control(type='password', name='password', id='password', placeholder='Password')
     br
-    .form-group
-      label.col-sm-2.control-label(for='password') Confirm Password
-      .col-sm-10
-        input.form-control(type='password', name='password2', id='password2')
+    input.form-control(type='password', name='password2', id='password2', placeholder='Confirm Password')
     br
-    input.form-control(type='submit', name='submit', value='Join')
+    button.btn.btn-primary.form-control(type='submit', name='submit') Join
   script(type='text/javascript').
     function validateForm() {
       if (!document.getElementById('name').value) {

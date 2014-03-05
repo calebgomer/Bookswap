@@ -1,12 +1,35 @@
 extends layout
 block content
-  p Find Books
+  h3 Books You Need
   if books.length
     each book in books
-      .book
-        .soldBy 
-          a(href='mailto:#{book.email}') #{book.seller}
-          | &nbsp;has these books for you 
-        .isbn #{book.isbn}
+      .book.container
+        .row
+          .purchasing-options.col-md-2.pull-right
+            button.btn.btn-primary.btn-block(type='button', onclick='window.location.href="mailto:#{book.email}?subject=Buying or Trading for #{book.title} (Book Swap)";') Contact #{book.seller}
+            button.btn.btn-warning.btn-block(type='button', onclick='window.open("#{book.offerPage}");') Visit Amazon
+          img.col-md-1(src='#{book.image}')
+          .col-md-9
+            h4 #{book.title}
+              small &nbsp;by #{book.authors}
+            p.soldBy #{book.seller} is selling a copy. Contact #{book.seller} for pricing or trading options.
+            .online-pricing
+              if book.lowestNewPrice && book.lowestUsedPrice
+                p Amazon sells new copies starting at&nbsp;
+                  strong #{book.lowestNewPrice}
+                  | &nbsp;and used copies starting at&nbsp;
+                  strong #{book.lowestUsedPrice}
+                  | .
+              else
+                if book.lowestNewPrice
+                  p Amazon sells new copies starting at&nbsp;
+                    strong #{book.lowestNewPrice}
+                    | .
+                if book.lowestUsedPrice
+                  p Amazon sells used copies starting at&nbsp;
+                    strong #{book.lowestUsedPrice}
+                    | .
+        .row
+          hr
   else
     p We couldn't find any books right now. Here are some online purchasing options.

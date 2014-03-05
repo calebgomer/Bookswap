@@ -1,53 +1,73 @@
 extends layout
 block content
-  .userNamesBooks Your Books
-  if books && books.length
-    each book in books
-      .book
-        .name #{book.name}
-        .author #{book.author}
-        span.isbn.col-sm-2 #{book.isbn}
-        span.status.col-sm-10
-          form(action='/mybooks', role='form', method='post')
-            input(type='hidden', name='_csrf', value=csrfToken)
-            input(type='hidden', name='action', value='modifyBook')
-            input(type='hidden', name='isbn', value=book.isbn)
-            select.form-control.col-sm-2(name='ownedBookStatus', onchange='this.form.submit();')
-              if book.ownership === 'own'
-                option(selected, value='own') Own
-              else
-                option(value='own') Own
-              if book.ownership === 'selling'
-                option(selected, value='selling') Selling
-              else
-                option(value='selling') Selling
-              if book.ownership === 'buying'
-                option(selected, value='buying') Buying
-              else
-                option(value='buying') Buying
-          form(action='/mybooks', role='form', method='post')
-            input(type='hidden', name='_csrf', value=csrfToken)
-            input(type='hidden', name='action', value='removeBook')
-            input(type='hidden', name='isbn', value=book.isbn)
-            button.btn.btn-default(type='submit', name='Remove') Remove
-  else
-    h3 You don't have any books yet. Please add a book below!
-  br
-  .addBook
-    p Add a book  
-    form(action='/mybooks', role='form', method='post', onsubmit='return document.getElementById("newBookIsbn").value ? true : false;')
-      input(type='hidden', name='_csrf', value=csrfToken)
-      input(type='hidden', name='action', value='addBook')
-      .form-group
-        label.col-sm-2.control-label Book ISBN
-        .col-sm-10
-          input.form-control(type='text', name='isbn', id='newBookIsbn')
-      .form-group
-        label.col-sm-2.control-label Ownership
-        .col-sm-10
-          select.form-control(name='newBookOwnership')
-            option(value='own') I own this book
-            option(value='selling') I am selling this book
-            option(value='buying') I am buying this book
-      br
-      button.btn.btn-default(type='submit', name='submit') Add Book
+  .row.well
+    .col-md-6
+      h3 Add a book  
+      form(action='/mybooks', role='form', method='post', onsubmit='return document.getElementById("newBookIsbn").value ? true : false;')
+        input(type='hidden', name='_csrf', value=csrfToken)
+        input(type='hidden', name='action', value='addBook')
+        input.form-control(type='text', name='isbn', id='newBookIsbn', placeholder='Book ISBN Number')
+        br
+        select.form-control(name='newBookOwnership')
+          option(value='own') I own this book
+          option(value='selling') I am selling this book
+          option(value='buying') I am buying this 
+        br
+        button.form-control.btn.btn-success(type='submit', name='submit') Add Book
+    .col-md-6
+      if school && school.textbookLookupUrl
+        if school.name
+          h3 #{school.name} Textbook Lookup
+        else
+          h3 Textbook Lookup
+        p Don't know the ISBN numbers of your books? Look them up on you school's Textbook Lookup website.
+        button.form-control.btn.btn-primary(type='button', onclick='window.open("#{school.textbookLookupUrl}");') Look Up Textbooks
+      else
+        h3 Add Textbook Lookup!
+        p No one has added the textbook lookup website for your school. If you know what it is, please paste it here so everyone else at you school can use it too!
+        form(action='/mybooks', role='form', method='post')
+          input(type='hidden', name='_csrf', value=csrfToken)
+          input(type='hidden', name='action', value='addTextbookLookupUrl')
+          input.form-control(type='text', name='textbookLookupUrl', placeholder='Textbook Lookup URL')
+          br
+          button.form-control.btn.btn-success(type='submit', name='submit') Add Textbook Lookup
+  .row.well
+    if books && books.length
+      h3 Your Books
+      - var lastBookOwnership;
+      each book in books
+        - if (!lastBookOwnership) lastBookOwnership = book.ownership;
+        - if (lastBookOwnership !== book.ownership)
+          hr
+        - lastBookOwnership = book.ownership;
+        .book
+          .row
+            .modify-book-options.col-md-4.pull-right
+              form.col-sm-6(action='/mybooks', role='form', method='post')
+                input(type='hidden', name='_csrf', value=csrfToken)
+                input(type='hidden', name='action', value='modifyBook')
+                input(type='hidden', name='isbn', value=book.isbn)
+                select.form-control(name='ownedBookStatus', onchange='this.form.submit();')
+                  if book.ownership === 'own'
+                    option(selected, value='own') Own
+                  else
+                    option(value='own') Own
+                  if book.ownership === 'selling'
+                    option(selected, value='selling') Selling
+                  else
+                    option(value='selling') Selling
+                  if book.ownership === 'buying'
+                    option(selected, value='buying') Buying
+                  else
+                    option(value='buying') Buying
+              form.col-sm-6(action='/mybooks', role='form', method='post')
+                input(type='hidden', name='_csrf', value=csrfToken)
+                input(type='hidden', name='action', value='removeBook')
+                input(type='hidden', name='isbn', value=book.isbn)
+                button.btn.btn-danger(type='submit', name='Remove') Remove
+            .col-md-8
+              .title
+                h4 #{book.title} 
+                  small &nbsp;by #{book.authors}
+    else
+      h3 You don't have any books yet. Please add some books!

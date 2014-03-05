@@ -1,7 +1,9 @@
 extends layout
 block content
-  p Thanks for joining Book Swap, #{name}!
-  p An email has been sent to #{email} with a link to verify your account. Once you verify your account you will be able to contact people with the books you need.
+  h4 Thanks for joining Book Swap, #{name}!
+  p An email has been sent to&nbsp;
+    strong #{email}
+    | &nbsp;with a link to verify your account. Once you verify your account you will be able to contact other students at your school to trade books.
   p You should also add the books you own&nbsp
    a(href='/mybooks') here
    | &nbspso other people can find them
