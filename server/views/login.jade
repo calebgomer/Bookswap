@@ -1,12 +1,24 @@
 extends layout
 block content
-  h3 Login to Book Swap
+  .col-sm-12.col-md-6
+    h3 Login to Book Swap
+    br
+    form(action='/login', method='post', role='form')
+      input(type='hidden', name='_csrf', value=csrfToken)
+      input(type='hidden', name='destination', value=destination)
+      input.form-control(type='email', name='email', placeholder='Email')
+      br
+      input.form-control(type='password', name='password', placeholder='Password')
+      br
+      button.btn.btn-primary.form-control(type='submit', name='submit') Login
+      br
+      h5 Forgot your password?&nbsp;
+        a(href='/passwordreset') Reset your password
+        | .
+  .col-sm-12.col-md-6
+    h3 Don't have an account yet?
+    br
+    p Tired of paying too much for books, only to get pennies back when you sell them? Try Book Swap, a better way to buy and sell your textbooks.
+    p Book Swap helps you find other students on campus who need your used books! The best part? You get to set the prices, not the book store.
+    button.btn.btn-success.form-control(type='button', onclick='location.href="/join"') Join Now!
   br
-  form.col-sm-12.col-md-6(action='/login', method='post', role='form')
-    input(type='hidden', name='_csrf', value=csrfToken)
-    input(type='hidden', name='destination', value=destination)
-    input.form-control(type='email', name='email', placeholder='Email')
-    br
-    input.form-control(type='password', name='password', placeholder='Password')
-    br
-    button.btn.btn-primary.form-control(type='submit', name='submit') Login

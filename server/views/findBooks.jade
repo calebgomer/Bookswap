@@ -1,35 +1,123 @@
 extends layout
 block content
-  h3 Books You Need
-  if books.length
-    each book in books
+  script.
+    function contactSellers(isbn, title) {
+      console.log(isbn, title);
+      $('#bookDetails').text('I am interested in your copy of "'+title+'" (ISBN:'+isbn+').');
+      document.findbooksform.isbn.value =  isbn;
+      $('#contactModal').modal('show');
+    }
+  #contactModal.modal.fade
+    .modal-dialog
+      .modal-content
+        form(action='/findbooks', name='findbooksform' role='form', method='post')
+          .modal-header
+            button.close(type='button', data-dismiss='modal', aria-hidden='true') x
+            h4.modal-title Send a Message
+          .modal-body
+            .alert.alert-info Always meet other students on campus at a public place, like a coffee shop! This message can only be sent to other students at your school who have confirmed their email address (ending in&nbsp;
+              strong #{user.schoolid}
+              | ). You can't remove your name, email, or the scam/safety warning from this message, so don't try anything sketchy!
+            p Hi Book Swap Seller,
+            p#bookDetails
+            input(type='hidden', name='_csrf', value=csrfToken)
+            input(type='hidden', name='isbn')
+            input(type='hidden', name='action', value='message')
+            textarea.form-control(rows='4', name='message', placeholder='Any other details you would like to add...')
+            p Thanks!
+            p #{user.name} (#{user.email})
+            h4
+              small Just like on Craigslist, remember to beware of&nbsp;
+                a(href='http://www.craigslist.org/about/scams', target='_blank') scams
+              small &nbsp;and to be&nbsp;
+                a(href='http://www.craigslist.org/about/safety', target='_blank') safe
+                | .
+          .modal-footer
+            button.btn.btn-default(type='button', data-dismiss='modal') Close
+            button.btn.btn-success(type='submit') Send
+  h3 Books You're Buying
+  if books && books.length
+    each book,i in books
+      - var lowestPrice;
       .book.container
-        .row
-          .purchasing-options.col-md-2.pull-right
-            button.btn.btn-primary.btn-block(type='button', onclick='window.location.href="mailto:#{book.email}?subject=Buying or Trading for #{book.title} (Book Swap)";') Contact #{book.seller}
-            button.btn.btn-warning.btn-block(type='button', onclick='window.open("#{book.offerPage}");') Visit Amazon
-          img.col-md-1(src='#{book.image}')
-          .col-md-9
-            h4 #{book.title}
-              small &nbsp;by #{book.authors}
-            p.soldBy #{book.seller} is selling a copy. Contact #{book.seller} for pricing or trading options.
-            .online-pricing
-              if book.lowestNewPrice && book.lowestUsedPrice
-                p Amazon sells new copies starting at&nbsp;
-                  strong #{book.lowestNewPrice}
-                  | &nbsp;and used copies starting at&nbsp;
-                  strong #{book.lowestUsedPrice}
-                  | .
+        hr
+        .row.col-md-12
+          .col-sm-2.col-xs-12.text-center
+            img.img-rounded(src='#{book.image}')
+          .col-sm-10.col-xs-12
+            .row.text-center-xs
+              h4 #{book.title}
+                small &nbsp;by #{book.authors}
+              if book.numSellers
+                p.hidden-xs
+                  strong #{book.numSellers} student
+                  if book.numSellers > 1
+                    strong s
+                  | &nbsp;at your school are selling a copy. Press the "Contact" button below to let them know you're interested!
+                p.visible-xs
+                  strong #{book.numSellers} student
+                  if book.numSellers > 1
+                    strong s
+                  | &nbsp;selling a copy. Press "Contact" to send a message.
               else
-                if book.lowestNewPrice
-                  p Amazon sells new copies starting at&nbsp;
+                p It looks like nobody at your school is selling this book right now. Check back soon!
+              .online-pricing
+                if book.lowestNewPrice && book.lowestUsedPrice
+                  p.hidden-xs Amazon currently has used copies starting at&nbsp;
+                    strong #{book.lowestUsedPrice}
+                    | &nbsp;and new copies starting at&nbsp;
                     strong #{book.lowestNewPrice}
                     | .
-                if book.lowestUsedPrice
-                  p Amazon sells used copies starting at&nbsp;
+                  p.visible-xs
+                    strong #{book.lowestUsedPrice}
+                    | + for used copies on Amazon
+                  - lowestPrice = book.lowestUsedPrice;
+                else if book.lowestNewPrice
+                  - lowestPrice = book.lowestNewPrice;
+                  p.hidden-xs Amazon currently has new copies starting at&nbsp;
+                    strong #{book.lowestNewPrice}
+                    | .
+                  p.visible-xs
+                    strong #{book.lowestNewPrice}
+                    | + for new copies on Amazon
+                else if book.lowestUsedPrice
+                  - lowestPrice = book.lowestUsedPrice;
+                  p.hidden-xs Amazon currently has used copies starting at&nbsp;
                     strong #{book.lowestUsedPrice}
                     | .
-        .row
-          hr
+                  p.visible-xs
+                    strong #{book.lowestUsedPrice}
+                    | + for used copies on Amazon.
+                p.hidden-xs You can probably find this book online elsewhere, too. The links below should get you started.
+              br
+            .row.col-sm-12
+              if book.numSellers
+                .col-sm-2.col-xs-6
+                  button.btn.btn-success.btn-block(type='button', onclick='contactSellers("#{book.isbn}", "#{book.title}");') Contact
+                  br
+              .col-sm-2.col-xs-6
+                button.btn.btn-warning.btn-block(type='button', onclick='window.open("#{book.offerPage}");') Amazon
+                  //if lowestPrice
+                    | &nbsp;
+                    strong.hidden-xs #{lowestPrice.substring(0, lowestPrice.indexOf('.'))}+
+                br
+              .col-sm-2.col-xs-6
+                button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.abebooks.com/book-search/isbn/#{book.isbn}");') Abe Books
+                br
+              .col-sm-2.col-xs-6
+                button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.alibris.com/search/books/isbn/#{book.isbn}");') Alibris
+                br
+              .col-sm-2.col-xs-6
+                button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.half.ebay.com/search?isbn=#{book.isbn}");') Half.com
+                br
+              .col-sm-2.col-xs-6
+                button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.chegg.com/search/#{book.isbn}");') Chegg
+                br
+              unless book.numSellers
+                .col-sm-2.col-xs-6
+                  button.btn.btn-default.btn-block(type='button', onclick='window.open("https://www.google.com/#q=buy+textbook+#{book.isbn}&tbm=shop");') Google
+                  br
   else
-    p We couldn't find any books right now. Here are some online purchasing options.
+    p It doesn't look like you have any books!&nbsp;
+      a(href='/mybooks') You can add some here
+      | .

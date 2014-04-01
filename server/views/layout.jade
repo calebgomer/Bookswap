@@ -4,7 +4,7 @@ html(lang='en')
     title= title
     meta(name='viewport', content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
     meta(name='title', content='Bookswap')
-    meta(name='description', content='A site for trading textbooks')  
+    meta(name='description', content='A site for trading textbooks')
     meta(name='keywords', content='book, books, textbook, textbooks, college, university, trade, swap, bookswap, swapbook, swapbooks, cheap')
     link(rel='stylesheet', href='/stylesheets/styles.css')
     link(href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css", rel="stylesheet")
@@ -19,21 +19,37 @@ html(lang='en')
             span.icon-bar
           a.navbar-brand(href='/') Book Swap
         .collapse.navbar-collapse(id='collapsible-navbar')
-          ul.nav.navbar-nav
-            if user
+          if user
+            ul.nav.navbar-nav
               li
                 a(href='/mybooks') My Books
               li
                 a(href='/findbooks') Find Books
-              li
-                a(href='/logout') Logout
-            else
-              li
-                a(href='/join') Join
+            ul.nav.navbar-nav.navbar-right
+              li.dropdown
+                a(class='dropbdown-toggle', data-toggle='dropdown') #{user.name}&nbsp;
+                  b.caret
+                ul.dropdown-menu
+                  li
+                    a(href='/account') Account
+                  li.divider
+                  li
+                    a(href='/logout') Logout
+          else
+            ul.nav.navbar-nav.navbar-right
               li
                 a(href='/login') Login
-    #error.error #{error}
     .container
+      if errors
+        each error in errors
+          #error.error.alert.alert-danger
+            strong #{error}
+      if error
+        #error.error.alert.alert-danger
+          strong #{error}
+      if message
+        .alert.alert-info
+          strong #{message}
       block content
   script(src="//code.jquery.com/jquery-2.1.0.min.js")
   script(src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js")

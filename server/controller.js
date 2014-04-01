@@ -8,13 +8,8 @@ var bookHelper = require('./bookHelper');
 var _ = require('underscore');
 var async = require('async');
 require('buffertools').extend();
-var mongo = require('mongodb');
-var booksData;
-mongo.Db.connect(process.env.MONGOHQ_URL, function(err, db) {
-  db.collection('books', function(err, booksCollection) {
-    booksData = booksCollection;
-  });
-});
+var escape = require('escape-html');
+
 
 function join(req, res) {
   res.render('join');
@@ -23,7 +18,7 @@ function join(req, res) {
 function createAccount(req, res) {
   var email = req.body.email;
   var password = req.body.password;
-  var name = req.body.name;
+  var name = escape(req.body.name);
   if (email.indexOf(".edu", email.length - 4) == -1) {
     return res.render('join', {error: 'You must use a .edu email'});
   }
@@ -94,7 +89,6 @@ function authenticateUser(email, password, callback) {
     callback(err);
   }, function(client, done) {
     client.query('select * from students where email = $1', [email], function(err, result) {
-      // console.log(result);
       done();
       if (err) {
         console.error(err);
@@ -171,13 +165,34 @@ function confirmEmail(req, res) {
 }
 
 function getAccount(req, res) {
-  var email = req.user.email;
-  res.json(req.user);
+  res.render('account');
 }
 
 function login(req, res) {
   res.locals.destination = req.params.destination;
-  res.render('login');
+  res.render('login', { errors:req.flash('error') });
+}
+
+function showPasswordReset(req, res) {
+  res.render('passwordreset');
+}
+
+function passwordReset(req, res) {
+  var email = req.body.email;
+  var resetToken = myUtils.newUUID();
+  myUtils.getDbClient(function(err) {
+    res.render('passwordreset', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
+  }, function(client, done) {
+    client.query('update students set passwordResetToken = $1,passwordResetRequestTime = $2 where email = $3', [resetToken, new Date(), email], function(err, result) {
+      done();
+      if (err) {
+        res.render('passwordreset', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
+      } else {
+        emailHelper.sendPasswordReset({email: email, name: email, resetToken: resetToken});
+        res.render('passwordreset', {message:'If an account with your email exists, you will receive an email shortly with instuctions to reset your password.'});
+      }
+    });
+  });
 }
 
 function myBooks(req, res) {
@@ -188,7 +203,7 @@ function myBooks(req, res) {
     client.query('select * from bookList where email = $1 order by ownership', [email], function(err, result) {
       if (err) {
         done();
-        res.render('myBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.', books: new Array()});
+        res.render('myBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
       } else {
         var isbns = _.pluck(result.rows, 'isbn');
         async.parallel([
@@ -196,13 +211,12 @@ function myBooks(req, res) {
             // get school textbook lookup url
             client.query('select schools.name,schools.textbookLookupUrl from schools,students where students.email=$1 and students.schoolId=schools.schoolId limit 1', [req.user.email], function(err, result) {
               done();
-              console.log('**********',err,result.rowCount && result.rows[0]);
               callback(err, result.rowCount && result.rows[0]);
             });
           },
           function(callback) {
             // get book info from apis
-            async.map(isbns, getBookInfo, function(err, books) {
+            async.map(isbns, bookHelper.getBookInfo, function(err, books) {
               // insert user specific info in as well
               for (var i = books.length - 1; i >= 0; i--) {
                 _.extend(books[i], result.rows[i]);
@@ -211,47 +225,14 @@ function myBooks(req, res) {
             });
           }], function(err, results) {
             if (err) {
-              console.err('wtf',err);
+              console.error('error getting my books',err);
               res.render('myBooks', {error: 'Sorry, we couldn\'t get your books right now. Please try again later'});
             } else {
-              console.log('rendering');
               res.render('myBooks', {books: results[1], school: {name: results[0].name, textbookLookupUrl: results[0].textbooklookupurl}});
             }
           }
         );
       }
-    });
-  });
-}
-
-function getBookInfo(isbn, callback) {
-  booksData.find({'isbn':isbn}).toArray(function(err, items) {
-    if (items.length) {
-      console.log('cached data found for', isbn);
-      return callback(undefined, items[0]);
-    }
-    console.log('getting new data for', isbn);
-    async.parallel([
-      function(callback) {
-        bookHelper.googleIsbnSearch(isbn, callback);
-      }, function(callback) {
-        bookHelper.amazonIsbnSearch(isbn, callback);
-      }], function(err, results) {
-        if (err) {
-          return callback(err);
-        }
-        var book = {
-          isbn: isbn,
-          title:            results[0].items && results[0].items.length && results[0].items[0].volumeInfo.title || '(No Title Found)',
-          subtitle:         results[0].items && results[0].items.length && results[0].items[0].volumeInfo.subtitle || '',
-          authors:          results[0].items && results[0].items.length && results[0].items[0].volumeInfo.authors && results[0].items[0].volumeInfo.authors.join(', ') || ['Anonymous'],
-          image:            results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].MediumImage[0].URL[0],
-          lowestNewPrice:   results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary && results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestNewPrice && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestNewPrice[0].FormattedPrice[0],
-          lowestUsedPrice:  results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary && results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestUsedPrice && results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestUsedPrice[0].FormattedPrice[0],
-          offerPage:        results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].Offers && results[1].ItemLookupResponse.Items[0].Item && results[1].ItemLookupResponse.Items[0].Item[0].Offers[0].MoreOffersUrl[0]
-        }
-        booksData.insert(book, console.log);
-        callback(undefined, book);
     });
   });
 }
@@ -287,34 +268,36 @@ function addBooks(req, res) {
       });
     });
   } else if (action === 'modifyBook') {
-    var ownership = req.body.ownedBookStatus;
-    myUtils.getDbClient(function(err) {
-      res.locals.error = 'Sorry, we couldn\'t update that book. Please try again.';
-      return myBooks(req, res);
-    }, function(client, done) {
-      client.query('update bookList set ownership=$1 where email=$2 and isbn=$3', [ownership, req.user.email, isbn], function(err, result) {
-        done();
-        if (err) {
-          console.error('problem updating book', err);
-          res.locals.error = 'Sorry, we couldn\'t update that book. Please try again.';
-        }
-        myBooks(req, res);
+    var ownership = req.body.own || req.body.selling || req.body.buying || req.body.remove;
+    if (ownership === 'remove') {
+      myUtils.getDbClient(function(err) {
+        res.locals.error = 'Sorry, we couldn\'t remove that book. Please try again';
+        return myBooks(req, res);
+      }, function(client, done) {
+        client.query('delete from bookList where email=$1 and isbn=$2', [req.user.email, isbn], function(err, result) {
+          done();
+          if (err) {
+            console.error('problem removing book', err);
+            res.locals.error = 'Sorry, we couldn\'t remove that book. Please try again';
+          }
+          myBooks(req, res);
+        });
       });
-    });
-  } else if (action === 'removeBook') {
-    myUtils.getDbClient(function(err) {
-      res.locals.error = 'Sorry, we couldn\'t remove that book. Please try again';
-      return myBooks(req, res);
-    }, function(client, done) {
-      client.query('delete from bookList where email=$1 and isbn=$2', [req.user.email, isbn], function(err, result) {
-        done();
-        if (err) {
-          console.error('problem removing book', err);
-          res.locals.error = 'Sorry, we couldn\'t remove that book. Please try again';
-        }
-        myBooks(req, res);
+    } else {
+      myUtils.getDbClient(function(err) {
+        res.locals.error = 'Sorry, we couldn\'t update that book. Please try again.';
+        return myBooks(req, res);
+      }, function(client, done) {
+        client.query('update bookList set ownership=$1 where email=$2 and isbn=$3', [ownership, req.user.email, isbn], function(err, result) {
+          done();
+          if (err) {
+            console.error('problem updating book', err);
+            res.locals.error = 'Sorry, we couldn\'t update that book. Please try again.';
+          }
+          myBooks(req, res);
+        });
       });
-    });
+    }
   } else if (action === 'addTextbookLookupUrl') {
     var newTextbookLookupUrl = req.body.textbookLookupUrl;
     myUtils.getDbClient(function(err) {
@@ -334,29 +317,110 @@ function addBooks(req, res) {
 }
 
 function findBooks(req, res) {
-  console.log('school id', req.user.schoolid);
   myUtils.getDbClient(function(err) {
     res.render('findBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
   }, function(client, done) {
-    client.query('select bookList.email,isbn,name as seller from bookList,students where bookList.email = students.email and schoolId = $2 and emailConfirmed and isbn in (select isbn from bookList,students where students.email = bookList.email and bookList.email = $1 and ownership = \'buying\' and emailConfirmed) and ownership = \'selling\'', [req.user.email, req.user.schoolid], function(err, result) {
-      done();
-      if (err) {
-        console.log('error finding books', err);
-        res.render('findBooks', {books: [], error:'Sorry, we are having trouble matching books for you. Please try again soon.'});
-      } else {
-        var isbns = _.pluck(result.rows, 'isbn');
-        // get book info from apis
-        async.map(isbns, getBookInfo, function(err, books) {
-          // insert user specific info in as well
-          for (var i = books.length - 1; i >= 0; i--) {
-            _.extend(books[i], result.rows[i]);
+    async.parallel([
+      function(callback) {
+        // get number of sellers selling books
+        client.query('select count(bookList.*) as numSellers,isbn from bookList inner join students on bookList.email = students.email where ownership = \'selling\' and schoolId = $2 and emailConfirmed and isbn in (select isbn from bookList,students where students.email = bookList.email and bookList.email = $1 and ownership = \'buying\' and emailConfirmed) group by bookList.isbn', [req.user.email, req.user.schoolid], function(err, result) {
+          if (err) {
+            return callback(err);
           }
-          console.log(books);
-          res.render('findBooks', {books: books});
+          var numSellers = {};
+          for (var i = 0; i < result.rows.length; i++) {
+            numSellers[result.rows[i].isbn] = result.rows[i].numsellers;
+          }
+          callback(err, numSellers);
         });
+      },
+      function(callback) {
+        // get all user's books
+        client.query('select * from bookList where email = $1 and ownership = \'buying\'', [req.user.email], function(err, result) {
+          if (err) {
+            return callback(err);
+          }
+          var isbns = _.pluck(result.rows, 'isbn');
+            // get book info from apis
+          async.map(isbns, bookHelper.getBookInfo, function(err, books) {
+            // insert user specific info in as well
+            for (var i = books.length - 1; i >= 0; i--) {
+              _.extend(books[i], result.rows[i]);
+            }
+            callback(err, books);
+          });
+        });
+      }], function(err, results) {
+        done();
+        if (err) {
+          console.error('error finding books',err);
+          res.render('findBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
+        } else {
+          for (var i = 0; i < results[1].length; i++) {
+            // copy over the number of sellers for each book
+            results[1][i].numSellers = results[0][results[1][i].isbn] || 0;
+          }
+          res.render('findBooks', { books: results[1] });
+        }
       }
-    });
+    );
   });
+}
+
+function foundBook(req, res) {
+  var action = req.body.action;
+  var isbn = req.body.isbn;
+  console.log('isbn',isbn);
+  console.log('message', req.body.message);
+  switch(action) {
+    case 'message':
+      var message = escape(req.body.message);
+      myUtils.getDbClient(function(err) {
+        res.locals.error = 'Sorry, we\'re having some problems with the website right now. Please try again soon.';
+        findBooks(req, res);
+      }, function(client, done) {
+        client.query('select students.name,students.email from bookList,students where bookList.ownership = \'selling\' and bookList.email = students.email and students.schoolId = $2 and emailConfirmed and bookList.isbn = $1', [isbn, req.user.schoolid], function(err, result) {
+          done();
+          console.log('peeps', JSON.stringify(result.rows));
+          var toPeople = [];
+          for (var i = 0; i < result.rows.length; i++) {
+            toPeople.push({
+              name: result.rows[i].name,
+              email: result.rows[i].email,
+              type: 'bcc'
+            });
+          }
+          if (toPeople.length) {
+            bookHelper.getBookInfo(isbn, function(err, book) {
+              if (err) {
+                res.locals.error = 'Sorry, we\'re having trouble finding that book. Make sure you have a valid ISBN and please try again soon.';
+                return findBooks(req, res);
+              }
+              emailHelper.sendBookInquiryEmail({
+                toPeople: toPeople,
+                fromPerson: { name: req.user.name, email: req.user.email },
+                message: message,
+                title: book.title,
+                isbn: book.isbn
+              }, function(err, result) {
+                if (err) {
+                  console.error('error sending inquiry email', err);
+                  res.locals.error = 'Sorry, there was a problem sending your email. Please try again soon.';
+                  findBooks(req, res);
+                } else {
+                  res.locals.message = 'Your email has been sent!';
+                  findBooks(req, res);
+                }
+              });
+            });
+          } else {
+            res.locals.error = 'Sorry, no one is selling that book!';
+            findBooks(req, res);
+          }
+        });
+      });
+      break;
+  }
 }
 
 module.exports.getAccount = getAccount;
@@ -368,3 +432,6 @@ module.exports.authenticateUser = authenticateUser;
 module.exports.myBooks = myBooks;
 module.exports.addBooks = addBooks;
 module.exports.findBooks = findBooks;
+module.exports.foundBook = foundBook;
+module.exports.passwordReset = passwordReset;
+module.exports.showPasswordReset = showPasswordReset;

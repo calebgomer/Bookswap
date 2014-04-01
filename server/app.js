@@ -1,6 +1,7 @@
 // web server and router
 var fs = require('fs');
 var https = require('https');
+var flash = require('connect-flash');
 var express = require('express');
 var app = express();
 var path = require('path');
@@ -28,6 +29,7 @@ app.configure(function() {
   app.use(express.csrf());
   app.use(passport.initialize());
   app.use(passport.session());
+  app.use(flash());
   app.use(function (req, res, next) {
     res.locals.csrfToken = req.csrfToken();
     res.locals.user = req.user;
@@ -41,7 +43,7 @@ app.configure('production', function() {
     if (req.secure || (process.env.HEROKU && req.headers['x-forwarded-proto'] === 'https')) {
       next();
     } else {
-      res.json(505, {error: 'please use https with all your requests'});
+      return res.redirect(['https://', req.get('Host'), req.url].join(''));
     }
   });
 });
@@ -64,22 +66,25 @@ app.get('/', function(req, res) {
   res.render('home');
 });
 
-app.get('/account', controller.getAccount);
 app.get('/join', controller.join);
 app.post('/join', controller.createAccount);
 app.get('/confirm/:confirmationId', controller.confirmEmail);
+app.get('/passwordreset', controller.showPasswordReset);
+app.post('/passwordreset', controller.passwordReset);
 app.get('/login', controller.login);
 app.get('/login/:destination', controller.login);
 app.post('/login', function(req, res) {
-  passport.authenticate('local', {successRedirect:req.body.destination||'/', failureRedirect:'/login' })(req, res);
+  passport.authenticate('local', {successRedirect:req.body.destination||'/', failureRedirect:'/login', failureFlash:true })(req, res);
 });
-app.get('/logout', function(req, res){
+app.get('/logout', function(req, res) {
   req.logout();
   res.redirect('/');
 });
 app.get('/mybooks', loggedIn, controller.myBooks);
 app.post('/mybooks', loggedIn, controller.addBooks);
 app.get('/findbooks', loggedIn, controller.findBooks);
+app.post('/findbooks', loggedIn, controller.foundBook);
+app.get('/account', loggedIn, controller.getAccount);
 
 // setup passport
 passport.use(new LocalLoginStrategy({usernameField:'email'},
@@ -102,7 +107,7 @@ passport.deserializeUser(function(email, done) {
   myUtils.getDbClient(function(err) {
     return done(err);
   }, function(client, clientDone) {
-    client.query('select email,name,schoolId from students where email = $1', [email], function(err, result) {
+    client.query('select email,name,schoolId,emailConfirmed from students where email = $1', [email], function(err, result) {
       clientDone();
       var user;
       if (result.rowCount) {

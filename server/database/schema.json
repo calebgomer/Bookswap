@@ -61,6 +61,16 @@
           "null": true
         },
         {
+          "name": "passwordResetToken",
+          "type": "varchar(36)",
+          "null": true
+        },
+        {
+          "name": "passwordResetRequestTime",
+          "type": "timestamp",
+          "null": true
+        },
+        {
           "name": "emailConfirmed",
           "type": "boolean",
           "default": false
