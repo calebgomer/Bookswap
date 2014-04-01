@@ -53,7 +53,12 @@ block content
                   strong #{book.numSellers} student
                   if book.numSellers > 1
                     strong s
-                  | &nbsp;at your school are selling a copy. Press the "Contact" button below to let them know you're interested!
+                  | &nbsp;at your school&nbsp;
+                  if book.numSellers > 1
+                    | are
+                  else
+                    | is
+                  | &nbsp;selling a copy. Press the "Contact" button below to let them know you're interested!
                 p.visible-xs
                   strong #{book.numSellers} student
                   if book.numSellers > 1
