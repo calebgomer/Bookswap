@@ -114,9 +114,9 @@ function getBookInfo(isbn, callback) {
     }
     async.parallel([
       function(callback) {
-        googleIsbnSearch(isbn, callback);
+        makeGoogleIsbnQuery(isbn, callback);
       }, function(callback) {
-        amazonIsbnSearch(isbn, callback);
+        makeAmazonQuery(isbn, callback);
       }], function(err, results) {
         if (err) {
           return callback(err);
