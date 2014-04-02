@@ -102,9 +102,6 @@ block content
                   br
               .col-sm-2.col-xs-6
                 button.btn.btn-warning.btn-block(type='button', onclick='window.open("#{book.offerPage}");') Amazon
-                  //if lowestPrice
-                    | &nbsp;
-                    strong.hidden-xs #{lowestPrice.substring(0, lowestPrice.indexOf('.'))}+
                 br
               .col-sm-2.col-xs-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.abebooks.com/book-search/isbn/#{book.isbn}");') Abe Books
