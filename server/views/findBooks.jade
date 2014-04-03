@@ -47,6 +47,7 @@ block content
           .col-sm-10.col-xs-12
             .row.text-center-xs
               h4 #{book.title}
+                br.visible-xs
                 small &nbsp;by #{book.authors}
               if book.numSellers
                 p.hidden-xs
@@ -63,13 +64,14 @@ block content
                   strong #{book.numSellers} student
                   if book.numSellers > 1
                     strong s
+                  | &nbsp;
                   if book.numSellers > 1
                     | are
                   else
                     | is
                   | &nbsp;selling a copy. Press "Contact" to send a message.
               else
-                p It looks like nobody at your school is selling this book right now. Check back soon!
+                p It doesn't look like anybody at your school is selling this book right now. Check back soon!
               .online-pricing
                 if book.lowestNewPrice && book.lowestUsedPrice
                   p.hidden-xs Amazon currently has used copies starting at&nbsp;
