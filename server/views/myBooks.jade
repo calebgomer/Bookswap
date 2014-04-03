@@ -11,8 +11,8 @@ block content
           br
           select.form-control(name='newBookOwnership')
             option(value='own') I own this book
-            option(value='selling') I am selling this book
-            option(value='buying') I am buying this
+            option(value='selling') I want to sell this book
+            option(value='buying') I want to buy this book
           br
           button.form-control.btn.btn-success(type='submit', name='submit') Add Book
       .col-md-6
@@ -51,7 +51,7 @@ block content
         .container
           .book
             .row
-              .col-sm-2.col-xs-12.text-center-xs
+              .col-sm-2.col-xs-12.text-center
                 img.img-rounded(src='#{book.image}')
               .col-sm-10.col-xs-12
                 .row.text-center-xs
