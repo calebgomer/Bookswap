@@ -22,23 +22,20 @@ html(lang='en')
           if user
             ul.nav.navbar-nav
               li
-                a(href='/mybooks') My Books
+                a(href='/mybooks') My Book List
               li
-                a(href='/findbooks') Find Books
+                a(href='/findbooks') Buy Books
             ul.nav.navbar-nav.navbar-right
-              li.dropdown
-                a(class='dropbdown-toggle', data-toggle='dropdown') #{user.name}&nbsp;
-                  b.caret
-                ul.dropdown-menu
-                  li
-                    a(href='/account') Account
-                  li.divider
-                  li
-                    a(href='/logout') Logout
+              li
+                a(href='/account') #{user.name}
+              li
+                a(href='/logout') Logout
           else
             ul.nav.navbar-nav.navbar-right
               li
                 a(href='/login') Login
+              li
+                a(href='/join') Join
     .container
       if errors
         each error in errors

@@ -42,9 +42,9 @@ block content
       .book.container
         hr
         .row.col-md-12
-          .col-sm-2.col-xs-12.text-center
+          .col-md-2.col-sm-3.col-xs-12.text-center
             img.img-rounded(src='#{book.image}')
-          .col-sm-10.col-xs-12
+          .col-md-10.col-sm-9.col-xs-12
             .row.text-center-xs
               h4 #{book.title}
                 br.visible-xs
@@ -103,28 +103,30 @@ block content
               br
             .row.col-sm-12
               if book.numSellers
-                .col-sm-2.col-xs-6
+                .col-md-2.col-sm-6
                   button.btn.btn-success.btn-block(type='button', onclick='contactSellers("#{book.isbn}", "#{book.title}");') Contact
                   br
-              .col-sm-2.col-xs-6
-                button.btn.btn-warning.btn-block(type='button', onclick='window.open("#{book.offerPage}");') Amazon
-                br
-              .col-sm-2.col-xs-6
+              .col-md-2.col-sm-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.abebooks.com/book-search/isbn/#{book.isbn}");') Abe Books
                 br
-              .col-sm-2.col-xs-6
+              .col-md-2.col-sm-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.alibris.com/search/books/isbn/#{book.isbn}");') Alibris
                 br
-              .col-sm-2.col-xs-6
-                button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.half.ebay.com/search?isbn=#{book.isbn}");') Half.com
+              .col-md-2.col-sm-6
+                button.btn.btn-primary.btn-block(type='button', onclick='window.open("#{book.offerPage}");') Amazon
                 br
-              .col-sm-2.col-xs-6
+              .col-md-2.col-sm-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.chegg.com/search/#{book.isbn}");') Chegg
                 br
-              unless book.numSellers
-                .col-sm-2.col-xs-6
-                  button.btn.btn-primary.btn-block(type='button', onclick='window.open("https://www.google.com/#q=#{book.isbn}&tbm=shop");') Google
-                  br
+              .col-md-2.col-sm-6
+                button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.ebay.com/sch/?_nkw=#{book.isbn}");') Ebay
+                br
+              .col-md-2.col-sm-6
+                button.btn.btn-primary.btn-block(type='button', onclick='window.open("https://www.google.com/#q=#{book.isbn}&tbm=shop");') Google
+                br
+              .col-md-2.col-sm-6
+                button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.half.ebay.com/search?isbn=#{book.isbn}");') Half.com
+                br
   else
     p It doesn't look like you've added any books to your buying list!&nbsp;
       a(href='/mybooks') You can add some here
