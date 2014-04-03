@@ -63,6 +63,10 @@ block content
                   strong #{book.numSellers} student
                   if book.numSellers > 1
                     strong s
+                  if book.numSellers > 1
+                    | are
+                  else
+                    | is
                   | &nbsp;selling a copy. Press "Contact" to send a message.
               else
                 p It looks like nobody at your school is selling this book right now. Check back soon!
