@@ -1,6 +1,6 @@
 var validatorScript = document.createElement('script');
 validatorScript.type = 'text/javascript';
-validatorScript.src = 'http://book-swap.herokuapp.com/javascripts/validator.min.js';
+validatorScript.src = 'http://bookswap-web.herokuapp.com/javascripts/validator.min.js';
 document.getElementsByTagName('head')[0].appendChild(validatorScript);
 
 var isbns = {};
