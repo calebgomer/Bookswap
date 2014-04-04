@@ -5,4 +5,10 @@ block content
     h5 Name
     p #{user.name}
     h5 Email
-    p #{user.email}
+    p #{user.email}&nbsp;
+      if user.emailconfirmed
+        span.glyphicon.glyphicon-ok
+        | &nbsp;Confirmed
+      else
+        span.glyphicon.glyphicon-warning-sign
+        | &nbsp;You haven't confirmed your email yet so you cannot buy or sell books with other students.

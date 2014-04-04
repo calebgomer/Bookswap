@@ -1,45 +1,46 @@
 extends layout
 block content
   .container
-    .row.well
-      .col-md-6
-        h3 Add a book
-        form(action='/mybooks', role='form', method='post', onsubmit='return document.getElementById("newBookIsbn").value ? true : false;')
-          input(type='hidden', name='_csrf', value=csrfToken)
-          input(type='hidden', name='action', value='addBook')
-          input.form-control(type='text', name='isbn', id='newBookIsbn', placeholder='Book ISBN Number')
-          br
-          select.form-control(name='newBookOwnership')
-            option(value='own') I own this book
-            option(value='selling') I want to sell this book
-            option(value='buying') I want to buy this book
-          br
-          button.form-control.btn.btn-success(type='submit', name='submit') Add Book
-      .col-md-6
-        if school && school.textbookLookupUrl
-          if school.name
-            h3 #{school.name} Textbook Lookup
-          else
-            h3 Textbook Lookup
-          p Don't know the ISBN numbers of your books? Look them up on you school's Textbook Lookup website.
-          button.form-control.btn.btn-primary(type='button', onclick='window.open("#{school.textbookLookupUrl}");') Look Up Textbooks
-        else
-          h3 Add Textbook Lookup!
-          p No one has added the textbook lookup website for your school. If you know what it is, please paste it here so everyone else at you school can use it too!
-          form(action='/mybooks', role='form', method='post')
+    .row
+      .col-lg-12.col-md-11.well
+        .col-md-6
+          h3 Add a book
+          form(action='/mybooks', role='form', method='post', onsubmit='return document.getElementById("newBookIsbn").value ? true : false;')
             input(type='hidden', name='_csrf', value=csrfToken)
-            input(type='hidden', name='action', value='addTextbookLookupUrl')
-            input.form-control(type='text', name='textbookLookupUrl', placeholder='Textbook Lookup URL')
+            input(type='hidden', name='action', value='addBook')
+            input.form-control(type='text', name='isbn', id='newBookIsbn', placeholder='Book ISBN Number')
             br
-            button.form-control.btn.btn-success(type='submit', name='submit') Add Textbook Lookup
-        .hidden-xs
-          h3 Automatic Book Import
-          p Drag the link below into your bookmarks bar. When you're at you school's textbook website and have found your books, press the bookmark to automatically add your books to your Book List here!
-          p
-            a(href="javascript:(function(){_isbn_script=document.createElement('script');_isbn_script.type='text/javascript';_isbn_script.src='http://bookswap-web.herokuapp.com/javascripts/isbnSnatcher.js';document.getElementsByTagName('head')[0].appendChild(_isbn_script);})();") Book Swap Import
-            | &nbsp;&nbsp;&nbsp;
-            span.glyphicon.glyphicon-arrow-left
-            | &nbsp;Drag To Your Bookmarks Bar
+            select.form-control(name='newBookOwnership')
+              option(value='own') I own this book
+              option(value='selling') I want to sell this book
+              option(value='buying') I want to buy this book
+            br
+            button.form-control.btn.btn-success(type='submit', name='submit') Add Book
+        .col-md-6
+          if school && school.textbookLookupUrl
+            if school.name
+              h3 #{school.name} Textbook Lookup
+            else
+              h3 Textbook Lookup
+            p Don't know the ISBN numbers of your books? Look them up on you school's Textbook Lookup website.
+            button.form-control.btn.btn-primary(type='button', onclick='window.open("#{school.textbookLookupUrl}");') Look Up Textbooks
+          else
+            h3 Add Textbook Lookup!
+            p No one has added the textbook lookup website for your school. If you know what it is, please paste it here so everyone else at you school can use it too!
+            form(action='/mybooks', role='form', method='post')
+              input(type='hidden', name='_csrf', value=csrfToken)
+              input(type='hidden', name='action', value='addTextbookLookupUrl')
+              input.form-control(type='text', name='textbookLookupUrl', placeholder='Textbook Lookup URL')
+              br
+              button.form-control.btn.btn-success(type='submit', name='submit') Add Textbook Lookup
+          .hidden-xs
+            h3 Automatic Book Import
+            p Drag the link below into your bookmarks bar. When you're at you school's textbook website and have found your books, press the bookmark to automatically add your books to your Book List here!
+            p
+              a(href="javascript:(function(){_isbn_script=document.createElement('script');_isbn_script.type='text/javascript';_isbn_script.src='http://bookswap-web.herokuapp.com/javascripts/isbnSnatcher.js';document.getElementsByTagName('head')[0].appendChild(_isbn_script);})();") Book Swap Import
+              | &nbsp;&nbsp;&nbsp;
+              span.glyphicon.glyphicon-arrow-left
+              | &nbsp;Drag To Your Bookmarks Bar
   .row
     if books && books.length
       - var lastBookOwnership;

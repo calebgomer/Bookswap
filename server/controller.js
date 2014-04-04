@@ -196,6 +196,7 @@ function passwordReset(req, res) {
 }
 
 function myBooks(req, res) {
+  console.log('cookie', req.cookies && req.cookies['import-books']);
   var email = req.user.email;
   myUtils.getDbClient(function(err) {
     res.render('myBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
@@ -205,7 +206,6 @@ function myBooks(req, res) {
         done();
         res.render('myBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
       } else {
-        console.log('books', result.rows);
         var isbns = _.pluck(result.rows, 'isbn');
         async.parallel([
           function(callback) {
@@ -318,7 +318,21 @@ function addBooks(req, res) {
 }
 
 function importBooks(req, res) {
-  var isbns = JSON.parse(req.body.isbns);
+  var isbns;
+  if (req.body.isbns) {
+    isbns = JSON.parse(req.body.isbns);
+  } else {
+    isbns = req.cookies && req.cookies['import-books'] && req.cookies['import-books'].isbns;
+  }
+  if (!(isbns && isbns.length)) {
+    req.flash('message', ['You don\'t have any books to import.']);
+    if (req.user) {
+      res.redirect('/mybooks');
+    } else {
+      res.redirect('/');
+    }
+    return;
+  }
   var importIsbns = [];
   for (var i = 0; i < isbns.length; i++) {
     var isbn = escape(isbns[i].replace(/-/g, '').trim());
@@ -349,6 +363,7 @@ function importBooks(req, res) {
           console.error('problem importing books', err);
           req.flash('error', ['Sorry, something went terribly wrong and we couldn\'t import all of your books. Please try that again.']);
         } else {
+          res.clearCookie('import-books');
           req.flash('error', [problems.length+' books were not added because they are already in your book list.']);
           req.flash('message', [importIsbns.length-problems.length+' books were successfully imported!']);
         }
@@ -358,7 +373,7 @@ function importBooks(req, res) {
   } else {
     res.cookie('import-books', { isbns:importIsbns, time:new Date() });
     req.flash('message', ['Please log in so we can add your books to your Book List!']);
-    res.redirect('/login/mybooks');
+    res.redirect('/login/import');
   }
 }
 

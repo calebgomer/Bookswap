@@ -84,18 +84,14 @@ app.get('/passwordreset', controller.showPasswordReset);
 app.post('/passwordreset', controller.passwordReset);
 app.get('/login', controller.login);
 app.get('/login/:destination', controller.login);
-app.post('/login', function(req, res) {
-  passport.authenticate('local', {successRedirect:req.body.destination||'/', failureRedirect:'/login', failureFlash:true })(req, res);
-});
-app.get('/logout', function(req, res) {
-  req.logout();
-  res.redirect('/');
-});
+app.post('/login', function(req, res) { passport.authenticate('local', {successRedirect:req.body.destination||'/', failureRedirect:'/login', failureFlash:true })(req, res); });
+app.get('/logout', function(req, res) { req.logout(); res.redirect('/'); });
 app.get('/mybooks', loggedIn, controller.myBooks);
 app.post('/mybooks', loggedIn, controller.addBooks);
 app.get('/findbooks', loggedIn, controller.findBooks);
 app.post('/findbooks', loggedIn, controller.foundBook);
 app.get('/account', loggedIn, controller.getAccount);
+app.get('/import', controller.import);
 app.post('/import', controller.import);
 
 // setup passport
