@@ -329,12 +329,12 @@ function importBooks(req, res) {
       importIsbns.push(isbn);
     }
   }
+  var problems = [];
   if (req.user) {
     myUtils.getDbClient(function(err) {
-      req.flash('error', 'Sorry, we\'re having problems with our website right now. Please try that again soon.');
+      req.flash('error', ['Sorry, we\'re having problems with our website right now. Please try that again soon.']);
       res.redirect('/mybooks');
     }, function(client, done) {
-      var problems = [];
       async.each(importIsbns, function(isbn, callback) {
         client.query('insert into bookList values ($1, $2, $3)', [req.user.email, isbn, 'buying'], function(err, result) {
           if (err && err.code === '23505') {
