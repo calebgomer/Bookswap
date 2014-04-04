@@ -36,6 +36,14 @@ app.configure(function() {
       res.locals.csrfToken = req.csrfToken();
     }
     res.locals.user = req.user;
+    var errors = req.flash('error');
+    if (errors) {
+      res.locals.errors = errors;
+    }
+    var message = req.flash('message');
+    if (message) {
+      res.locals.messages = message;
+    }
     next();
   });
   app.use(app.router);

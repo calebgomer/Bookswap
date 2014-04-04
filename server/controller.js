@@ -170,7 +170,7 @@ function getAccount(req, res) {
 
 function login(req, res) {
   res.locals.destination = req.params.destination;
-  res.render('login', { errors:req.flash('error') });
+  res.render('login');
 }
 
 function showPasswordReset(req, res) {
@@ -205,6 +205,7 @@ function myBooks(req, res) {
         done();
         res.render('myBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
       } else {
+        console.log('books', result.rows);
         var isbns = _.pluck(result.rows, 'isbn');
         async.parallel([
           function(callback) {
@@ -239,7 +240,7 @@ function myBooks(req, res) {
 
 function addBooks(req, res) {
   var action = req.body.action;
-  var isbn = req.body.isbn;
+  var isbn = req.body.isbn && req.body.isbn.replace(/-/g,'').trim();
   if (action === 'addBook') {
     var ownership = req.body.newBookOwnership;
     if (!validator.isISBN(isbn, 13)) {
@@ -318,8 +319,46 @@ function addBooks(req, res) {
 
 function importBooks(req, res) {
   var isbns = JSON.parse(req.body.isbns);
-  console.log(isbns);
-  res.send(isbns);
+  var importIsbns = [];
+  for (var i = 0; i < isbns.length; i++) {
+    var isbn = escape(isbns[i].replace(/-/g, '').trim());
+    if (validator.isISBN(isbn)) {
+      if (isbn.length == 10) {
+        isbn = bookHelper.isbn10to13(isbn);
+      }
+      importIsbns.push(isbn);
+    }
+  }
+  if (req.user) {
+    myUtils.getDbClient(function(err) {
+      req.flash('error', 'Sorry, we\'re having problems with our website right now. Please try that again soon.');
+      res.redirect('/mybooks');
+    }, function(client, done) {
+      var problems = [];
+      async.each(importIsbns, function(isbn, callback) {
+        client.query('insert into bookList values ($1, $2, $3)', [req.user.email, isbn, 'buying'], function(err, result) {
+          if (err && err.code === '23505') {
+            problems.push('ISBN '+isbn+": This book is already in your Book List");
+          }
+          console.log('insert', result && result.rowCount, 'errs:', err);
+          callback(undefined, result);
+        });
+      }, function(err) {
+        done();
+        if (err) {
+          console.error('problem importing books', err);
+          req.flash('error', ['Sorry, something went terribly wrong and we couldn\'t import all of your books. Please try that again.']);
+        } else {
+          req.flash('error', problems);
+        }
+        res.redirect('/mybooks');
+      });
+    });
+  } else {
+    res.cookie('import-books', { isbns:importIsbns, time:new Date() });
+    req.flash('message', ['Please log in so we can add your books to your Book List!']);
+    res.redirect('/login/mybooks');
+  }
 }
 
 function findBooks(req, res) {

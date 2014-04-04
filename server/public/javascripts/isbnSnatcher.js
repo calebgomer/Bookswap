@@ -34,9 +34,7 @@ function getIsbns() {
 }
 
 function importBooks() {
-  var form = $('<form action="https://bookswap-web.herokuapp.com/import" method="post">' +
-                 '<input id="isbns" type="text" name="isbns"/>' +
-               '</form>');
+  var form = $('<form action="https://bookswap-web.herokuapp.com/import" method="post"><input id="isbns" type="text" name="isbns"/></form>');
   $("body").append(form);
   $("#isbns").val(JSON.stringify(Object.keys(isbns)));
   $(form).submit();

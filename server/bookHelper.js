@@ -161,7 +161,14 @@ function getBookInfo(isbn, callback) {
   });
 }
 
+function convertIsbn10to13(isbn, callback) {
+  var sum = 38 + 3 * (parseInt(isbn[0]) + parseInt(isbn[2]) + parseInt(isbn[4]) + parseInt(isbn[6]) + parseInt(isbn[8])) + parseInt(isbn[1]) + parseInt(isbn[3]) + parseInt(isbn[5]) + parseInt(isbn[7]);
+  var checkDig = (10 - (sum % 10)) % 10;
+  return util.format("978%s%d", isbn.substring(0, 9), checkDig);
+}
+
 module.exports.googleBookSearch = makeGoogleBookQuery;
 module.exports.googleIsbnSearch = makeGoogleIsbnQuery;
 module.exports.amazonIsbnSearch = makeAmazonQuery;
 module.exports.getBookInfo = getBookInfo;
+module.exports.isbn10to13 = convertIsbn10to13;

@@ -44,6 +44,10 @@ html(lang='en')
       if error
         #error.error.alert.alert-danger
           strong #{error}
+      if messages
+        each message in messages
+          .alert.alert-info
+            strong #{message}
       if message
         .alert.alert-info
           strong #{message}

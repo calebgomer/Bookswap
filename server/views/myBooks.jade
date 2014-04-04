@@ -59,7 +59,8 @@ block content
           .book
             .row
               .col-md-2.col-sm-3.col-xs-12.text-center
-                img.img-rounded(src='#{book.image}')
+                if book.image
+                  img.img-rounded(src='#{book.image}')
               .col-md-10.col-sm-9.col-xs-12
                 .row.text-center-xs
                   .title
