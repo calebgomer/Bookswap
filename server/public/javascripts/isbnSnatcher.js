@@ -2,6 +2,12 @@ var validatorScript = document.createElement('script');
 validatorScript.type = 'text/javascript';
 validatorScript.src = 'http://bookswap-web.herokuapp.com/javascripts/validator.min.js';
 document.getElementsByTagName('head')[0].appendChild(validatorScript);
+if (!window.jQuery) {
+  var jQScript = document.createElement('script');
+  jQScript.type = 'text/javascript';
+  jQScript.src = '//code.jquery.com/jquery-1.11.0.min.js';
+  document.getElementsByTagName('head')[0].appendChild(jQScript);
+}
 
 var isbns = {};
 var isbnRegex13 = /[\D]{1}[0-9]{13}[\D]{1}/;
@@ -13,7 +19,13 @@ var isbnRegex10_x = /[\D]{1}[0-9]{1}-?[0-9]{1}-?[0-9]{1}-?[0-9]{1}-?[0-9]{1}-?[0
 function getIsbns() {
   getIsbn13s();
   getIsbn10s();
-  console.log(isbns);
+  if (Object.keys(isbns).length) {
+    if (confirm('Book Swap found some books that we can add to your book swap account\'s book buying list. Ready?')) {
+      console.log('go');
+    }
+  } else {
+    alert('Book Swap searched the page but didn\'t find any textbooks. Technically we\'re looking for ISBN numbers and it doesn\'t look like there\'s any on here.');
+  }
 }
 
 function getIsbn13s() {
@@ -52,28 +64,4 @@ function getIsbn10s() {
   }
 }
 
-/*
-<div class="modal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h4 class="modal-title">Book Swap Textbook Import</h4>
-      </div>
-      <div class="modal-body">
-        <h4>We'll get more information like titles, authors, images, etc. when we get back to Book Swap.</h4>
-        <ul>
-          <li>9780077514488</li>
-          <li>9781429246606</li>
-          <li>9780471295051</li>
-          <li>9780895827487</li>
-        </ul>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary">Import Into Book Swap</button>
-      </div>
-    </div>
-  </div>
-</div>
-*/
+setTimeout(getIsbns, 1000);
