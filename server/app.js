@@ -3,6 +3,7 @@ var fs = require('fs');
 var https = require('https');
 var flash = require('connect-flash');
 var express = require('express');
+var csrf = express.csrf();
 var app = express();
 var path = require('path');
 var controller = require('./controller');
@@ -26,12 +27,14 @@ app.configure(function() {
   app.use(express.cookieParser());
   app.use(express.bodyParser());
   app.use(express.session({secret:process.env.SESSION_SECRET}));
-  app.use(express.csrf());
+  app.use(customCsrf);
   app.use(passport.initialize());
   app.use(passport.session());
   app.use(flash());
   app.use(function (req, res, next) {
-    res.locals.csrfToken = req.csrfToken();
+    if (req.url !== '/import') {
+      res.locals.csrfToken = req.csrfToken();
+    }
     res.locals.user = req.user;
     next();
   });
@@ -85,6 +88,7 @@ app.post('/mybooks', loggedIn, controller.addBooks);
 app.get('/findbooks', loggedIn, controller.findBooks);
 app.post('/findbooks', loggedIn, controller.foundBook);
 app.get('/account', loggedIn, controller.getAccount);
+app.post('/import', controller.import);
 
 // setup passport
 passport.use(new LocalLoginStrategy({usernameField:'email'},
@@ -124,5 +128,13 @@ function loggedIn(req, res, next) {
     next();
   } else {
     res.redirect(util.format('/login%s', req._parsedUrl.path));
+  }
+}
+
+function customCsrf(req, res, next) {
+  if (req.url === '/import') {
+    next();
+  } else {
+    csrf(req, res, next);
   }
 }

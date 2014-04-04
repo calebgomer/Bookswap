@@ -1,3 +1,8 @@
+if (location.href.indexOf('bookswap-web.herokuapp.com') !== -1) {
+  alert('Oops, you clicked it! Try dragging it into your bookmarks, or drag it onto the bookmarks bar.');
+  return;
+}
+
 var validatorScript = document.createElement('script');
 validatorScript.type = 'text/javascript';
 validatorScript.src = 'http://bookswap-web.herokuapp.com/javascripts/validator.min.js';
@@ -20,12 +25,21 @@ function getIsbns() {
   getIsbn13s();
   getIsbn10s();
   if (Object.keys(isbns).length) {
-    if (confirm('Book Swap found some books that we can add to your book swap account\'s book buying list. Ready?')) {
-      console.log('go');
+    if (confirm('Book Swap found some books that we can add to your book swap account\'s book buying list! \n\nThis will take you back to Book Swap immediately. If you aren\'t quite done here, press cancel. You can always click the bookmark again when you\'re ready.')) {
+      importBooks();
     }
   } else {
     alert('Book Swap searched the page but didn\'t find any textbooks. Technically we\'re looking for ISBN numbers and it doesn\'t look like there\'s any on here.');
   }
+}
+
+function importBooks() {
+  var form = $('<form action="https://bookswap-web.herokuapp.com/import" method="post">' +
+                 '<input id="isbns" type="text" name="isbns"/>' +
+               '</form>');
+  $("body").append(form);
+  $("#isbns").val(JSON.stringify(Object.keys(isbns)));
+  $(form).submit();
 }
 
 function getIsbn13s() {

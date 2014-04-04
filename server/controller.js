@@ -316,6 +316,12 @@ function addBooks(req, res) {
   }
 }
 
+function importBooks(req, res) {
+  var isbns = JSON.parse(req.body.isbns);
+  console.log(isbns);
+  res.send(isbns);
+}
+
 function findBooks(req, res) {
   myUtils.getDbClient(function(err) {
     res.render('findBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
@@ -435,3 +441,4 @@ module.exports.findBooks = findBooks;
 module.exports.foundBook = foundBook;
 module.exports.passwordReset = passwordReset;
 module.exports.showPasswordReset = showPasswordReset;
+module.exports.import = importBooks;
