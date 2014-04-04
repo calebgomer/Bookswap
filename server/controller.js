@@ -349,7 +349,8 @@ function importBooks(req, res) {
           console.error('problem importing books', err);
           req.flash('error', ['Sorry, something went terribly wrong and we couldn\'t import all of your books. Please try that again.']);
         } else {
-          req.flash('error', problems);
+          req.flash('error', [problems.length+' books were not added because they are already in your book list.']);
+          req.flash('message', [importIsbns.length-problems.length+' books were successfully imported!']);
         }
         res.redirect('/mybooks');
       });
