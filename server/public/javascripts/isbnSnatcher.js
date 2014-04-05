@@ -1,11 +1,11 @@
-if (location.href.indexOf('bookswap-web.herokuapp.com') !== -1) {
+if (location.href.indexOf('book-swap.herokuapp.com') !== -1) {
   alert('Oops, you clicked it! Try dragging it into your bookmarks, or drag it onto the bookmarks bar.');
   return;
 }
 
 var validatorScript = document.createElement('script');
 validatorScript.type = 'text/javascript';
-validatorScript.src = 'http://bookswap-web.herokuapp.com/javascripts/validator.min.js';
+validatorScript.src = 'http://book-swap.herokuapp.com/javascripts/validator.min.js';
 document.getElementsByTagName('head')[0].appendChild(validatorScript);
 if (!window.jQuery) {
   var jQScript = document.createElement('script');
@@ -34,7 +34,7 @@ function getIsbns() {
 }
 
 function importBooks() {
-  var form = $('<form action="https://bookswap-web.herokuapp.com/import" method="post"><input id="isbns" type="text" name="isbns"/></form>');
+  var form = $('<form action="https://book-swap.herokuapp.com/import" method="post"><input id="isbns" type="text" name="isbns"/></form>');
   $("body").append(form);
   $("#isbns").val(JSON.stringify(Object.keys(isbns)));
   $(form).submit();

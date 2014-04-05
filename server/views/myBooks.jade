@@ -11,9 +11,9 @@ block content
             input.form-control(type='text', name='isbn', id='newBookIsbn', placeholder='Book ISBN Number')
             br
             select.form-control(name='newBookOwnership')
-              option(value='own') I own this book
-              option(value='selling') I want to sell this book
               option(value='buying') I want to buy this book
+              option(value='selling') I want to sell this book
+              option(value='own') I own this book (not selling or buying)
             br
             button.form-control.btn.btn-success(type='submit', name='submit') Add Book
         .col-md-6
@@ -37,7 +37,7 @@ block content
             h3 Automatic Book Import
             p Drag the link below into your bookmarks bar. When you're at you school's textbook website and have found your books, press the bookmark to automatically add your books to your Book List here!
             p
-              a(href="javascript:(function(){_isbn_script=document.createElement('script');_isbn_script.type='text/javascript';_isbn_script.src='http://bookswap-web.herokuapp.com/javascripts/isbnSnatcher.js';document.getElementsByTagName('head')[0].appendChild(_isbn_script);})();") Book Swap Import
+              a(href="javascript:(function(){_isbn_script=document.createElement('script');_isbn_script.type='text/javascript';_isbn_script.src='http://book-swap.herokuapp.com/javascripts/isbnSnatcher.js';document.getElementsByTagName('head')[0].appendChild(_isbn_script);})();") Book Swap Import
               | &nbsp;&nbsp;&nbsp;
               span.glyphicon.glyphicon-arrow-left
               | &nbsp;Drag To Your Bookmarks Bar

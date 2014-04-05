@@ -364,7 +364,9 @@ function importBooks(req, res) {
           req.flash('error', ['Sorry, something went terribly wrong and we couldn\'t import all of your books. Please try that again.']);
         } else {
           res.clearCookie('import-books');
-          req.flash('error', [problems.length+' books were not added because they are already in your book list.']);
+          if (problems.length) {
+            req.flash('error', [problems.length+' books were not added because they are already in your book list.']);
+          }
           req.flash('message', [importIsbns.length-problems.length+' books were successfully imported!']);
         }
         res.redirect('/mybooks');
@@ -421,6 +423,7 @@ function findBooks(req, res) {
             // copy over the number of sellers for each book
             results[1][i].numSellers = results[0][results[1][i].isbn] || 0;
           }
+          var sortedBooks = _.sortBy(results[1], function(book) { return -book.numSellers; });
           res.render('findBooks', { books: results[1] });
         }
       }
