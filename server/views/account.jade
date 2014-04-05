@@ -1,14 +1,18 @@
 extends layout
 block content
-  .col-sm-12.col-md-6
+  .col-sm-12.col-md-6.text-center-xs
     h3 Your Account Info
     h5 Name
     p #{user.name}
     h5 Email
-    p #{user.email}&nbsp;
-      if user.emailconfirmed
-        span.glyphicon.glyphicon-ok
-        | &nbsp;Confirmed
-      else
-        span.glyphicon.glyphicon-warning-sign
-        | &nbsp;You haven't confirmed your email yet so you cannot buy or sell books with other students.
+    .row
+      .col-xs-12
+        p #{user.email}&nbsp;&nbsp;
+          unless user.emailconfirmed
+            span.glyphicon.glyphicon-warning-sign
+            | &nbsp;Not Confirmed
+      unless user.emailconfirmed
+        .col-xs-12
+          form(action='/account', name='resendConfirmationEmailForm', method='post')
+            input(type='hidden', name='_csrf', value=csrfToken)
+            button.btn.btn-warning(type='submit', name='resendConfirmationEmail', value='resendConfirmationEmail') Resend Confirmation Email

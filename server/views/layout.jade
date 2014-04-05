@@ -27,7 +27,10 @@ html(lang='en')
                 a(href='/findbooks') Buy Books
             ul.nav.navbar-nav.navbar-right
               li
-                a(href='/account') #{user.name}
+                a(href='/account')
+                  unless user.emailconfirmed
+                    span.glyphicon.glyphicon-warning-sign &nbsp;
+                  | #{user.name}
               li
                 a(href='/logout') Logout
           else
@@ -39,16 +42,24 @@ html(lang='en')
         each error in errors
           #error.error.alert.alert-danger
             strong #{error}
-      if error
-        #error.error.alert.alert-danger
-          strong #{error}
       if messages
         each message in messages
           .alert.alert-info
-            strong #{message}
-      if message
-        .alert.alert-info
-          strong #{message}
+            if typeof message === 'string'
+              strong #{message}
+            else
+              strong #{message.message}&nbsp;
+              a(href='#{message.link}') Go here to for more info.
+      if warnings
+        each warning in warnings
+          .alert.alert-warning
+            span.glyphicon.glyphicon-warning-sign &nbsp;
+            if typeof message === 'string'
+              strong #{warning}
+            else
+              strong #{warning.message}&nbsp;
+              if warning.link !== path
+                a(href='#{warning.link}') Go here to fix it.
       block content
   script(src="//code.jquery.com/jquery-2.1.0.min.js")
   script(src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js")

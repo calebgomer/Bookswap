@@ -7,7 +7,9 @@ var csrf = express.csrf();
 var app = express();
 var path = require('path');
 var controller = require('./controller');
+var admin = require('./admin');
 var util = require('util');
+var _ = require('underscore');
 
 // user authentication
 var passport = require('passport');
@@ -35,14 +37,13 @@ app.configure(function() {
     if (req.url !== '/import') {
       res.locals.csrfToken = req.csrfToken();
     }
+    res.locals.path = req.path;
     res.locals.user = req.user;
-    var errors = req.flash('error');
-    if (errors) {
-      res.locals.errors = errors;
-    }
-    var message = req.flash('message');
-    if (message) {
-      res.locals.messages = message;
+    res.locals.errors = req.flash('error');
+    res.locals.warnings = req.flash('warning');
+    res.locals.messages = req.flash('message');
+    if (req.user && !req.user.emailconfirmed) {
+      res.locals.warnings.push({ message:'You haven\'t confirmed your email yet so you cannot buy or sell books with other students.', link:'/account' });
     }
     next();
   });
@@ -77,29 +78,39 @@ app.get('/', function(req, res) {
   res.render('home');
 });
 
+// user functions
 app.get('/join', controller.join);
 app.post('/join', controller.createAccount);
 app.get('/confirm/:confirmationId', controller.confirmEmail);
 app.get('/passwordreset', controller.showPasswordReset);
 app.post('/passwordreset', controller.passwordReset);
 app.get('/login', controller.login);
-app.get('/login/:destination', controller.login);
-app.post('/login', function(req, res) { passport.authenticate('local', {successRedirect:req.body.destination||'/', failureRedirect:'/login', failureFlash:true })(req, res); });
+app.get('/login/*', controller.login);
+app.post('/login', function(req, res) {
+  var destination = req.body.destination || '/';
+  passport.authenticate('local', {
+    successRedirect:destination, failureRedirect:util.format('/login%s', destination), failureFlash:true
+  })(req, res);
+});
 app.get('/logout', function(req, res) { req.logout(); res.redirect('/'); });
 app.get('/mybooks', loggedIn, controller.myBooks);
 app.post('/mybooks', loggedIn, controller.addBooks);
 app.get('/findbooks', loggedIn, controller.findBooks);
 app.post('/findbooks', loggedIn, controller.foundBook);
 app.get('/account', loggedIn, controller.getAccount);
+app.post('/account', loggedIn, controller.getAccount);
 app.get('/import', controller.import);
 app.post('/import', controller.import);
+
+// admin functions (must have ADMINS environment variable set)
+app.get('/admin/dashboard', loggedIn, ensureAdmin, admin.dashboard);
 
 // setup passport
 passport.use(new LocalLoginStrategy({usernameField:'email'},
   function(email, password, done) {
     controller.authenticateUser(email, password, function(err, user) {
       if (err) {
-        done(null, false, {message:'Your email or password are incorrect!'});
+        done(null, false, {message:err.error||'Your email or password are incorrect!'});
       } else {
         done(null, user);
       }
@@ -131,8 +142,32 @@ function loggedIn(req, res, next) {
   if (req.user) {
     next();
   } else {
-    res.redirect(util.format('/login%s', req._parsedUrl.path));
+    if (res.locals.errors.length) {
+      req.flash('error', res.locals.errors);
+    }
+    if (res.locals.warnings.length) {
+      req.flash('warning', res.locals.warnings);
+    }
+    if (res.locals.messages.length) {
+      req.flash('message', res.locals.messages);
+    }
+    res.redirect(util.format('/login%s', req.path));
   }
+}
+
+// middleware to ensure logged in user is an admin
+function ensureAdmin(req, res, next) {
+  if (req.user && process.env.ADMINS) {
+    var email = req.user.email;
+    var adminEmails = JSON.parse(process.env.ADMINS);
+    for (var i = 0; i < adminEmails.length; i++) {
+      if (email === adminEmails[i]) {
+        return next();
+      }
+    }
+  }
+  req.flash('warning', 'You are not authorized to use that.');
+  res.redirect('/');
 }
 
 function customCsrf(req, res, next) {

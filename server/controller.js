@@ -20,23 +20,28 @@ function createAccount(req, res) {
   var password = req.body.password;
   var name = escape(req.body.name);
   if (email.indexOf(".edu", email.length - 4) == -1) {
-    return res.render('join', {error: 'You must use a .edu email'});
+    res.locals.errors.push('You must use a .edu email address');
+    return res.render('join');
   }
   if (!password || password.length < 8) {
-    return res.render('join', {error: 'You must use a password with at least 8 charaters'});
+    res.locals.errors.push('You must use a password with at least 8 charaters');
+    return res.render('join');
   }
   var schoolId = email.substring(email.indexOf('@')+1);
   if (!name || !schoolId) {
-    return res.render('join', {error: 'You must choose a name and pick your school'});
+    res.locals.errors.push('You must choose a name and pick your school');
+    return res.render('join');
   }
   hashNewPassword(password, function(err, result) {
     if (err) {
       console.error('error hashing new password', err);
-      return res.render('join', {error: 'Our site is having an issue, please try again'});
+      res.locals.errors.push('Our site is having issues, please try again');
+      return res.render('join');
     }
     var passwordStuff = result;
     myUtils.getDbClient(function(err) {
-      return res.render('join', {error: 'Our site is having an issue, please try again'});
+      res.locals.errors.push('Our site is having issues, please try again');
+      return res.render('join');
     }, function(client, done) {
       var confirmationId = myUtils.newUUID();
       var insertQuery = 'insert into students (email, password, name, schoolId, emailConfirmationId) values ($1, $2, $3, $4, $5)';
@@ -46,21 +51,24 @@ function createAccount(req, res) {
           if (err.code === '23505') {
             done();
             console.log('user exists');
-            res.render('join', {error: 'Sorry, an account with this email already exists.'});
+            res.locals.errors.push('Sorry, an account with this email already exists.');
+            res.render('join');
           } else if (err.code === '23503') {
             console.log('new school! create entry in school table');
             client.query('insert into schools (schoolId) values ($1)', [schoolId], function(err, result) {
               if (err) {
                 done();
                 console.error('problem creating new school', err);
-                return res.render('join', {error: 'Sorry, we weren\'t able to create your account. Please try again soon.'});
+                res.locals.errors.push('Sorry, we weren\'t able to create your account. Please try again soon.');
+                return res.render('join');
               }
               console.log('created new school', result);
               client.query(insertQuery, insertParams, function(err, result) {
                 done();
                 if (err) {
                   console.error('problem adding user after creating new school', err);
-                  return res.render('join', {error: 'Sorry, we weren\'t able to create your account. Please try again soon.'});
+                  res.locals.errors.push('Sorry, we weren\'t able to create your account. Please try again soon.');
+                  return res.render('join');
                 }
                 console.log('added new user after creating new school', result);
                 emailHelper.sendNewEmailConfirmation({name: name, email: email, confirmationId: confirmationId});
@@ -70,7 +78,8 @@ function createAccount(req, res) {
           } else {
             done();
             console.error('problem inserting new user with code', err.code, err);
-            res.render('join', {error: 'Our site is having an issue, please try again.'});
+            res.locals.errors.push('Our site is having issues, please try again.');
+            res.render('join');
           }
         } else {
           done();
@@ -85,7 +94,7 @@ function createAccount(req, res) {
 
 function authenticateUser(email, password, callback) {
   myUtils.getDbClient(function(err) {
-    console.error(err);
+    console.error('auth error', err);
     callback(err);
   }, function(client, done) {
     client.query('select * from students where email = $1', [email], function(err, result) {
@@ -157,19 +166,38 @@ function confirmEmail(req, res) {
   accountHelper.confirmEmail(confirmationId, function(err, result) {
     console.log(err);
     if (err) {
-      res.json(err);
+      req.flash('error', err);
+      res.redirect('/account');
     } else {
-      res.json(result);
+      req.flash('message', 'Your email address has been confirmed!');
+      res.redirect('/account');
     }
   });
 }
 
 function getAccount(req, res) {
-  res.render('account');
+  if (req.body && req.body.resendConfirmationEmail) {
+    var confirmationId = myUtils.newUUID();
+    myUtils.getDbClient(res, function(client, done) {
+      client.query('update students set emailConfirmationId = $1 where email = $2', [confirmationId, req.user.email], function(err, result) {
+        if (err) {
+          console.error('problem resending confirmation email', err);
+          res.locals.errors.push('Sorry, we couldn\'t resend your confirmation email. Please try again soon.');
+        } else {
+          emailHelper.sendNewEmailConfirmation({ name:req.user.name, email:req.user.email, confirmationId:confirmationId });
+          res.locals.messages.push(util.format('We sent another confirmation email to %s.', req.user.email));
+        }
+        res.render('account');
+      });
+    });
+  } else {
+    res.render('account');
+  }
 }
 
 function login(req, res) {
-  res.locals.destination = req.params.destination;
+  // removes the '/login' from the path, the rest is the destination
+  res.locals.destination = req.path.substring(6);
   res.render('login');
 }
 
@@ -180,31 +208,32 @@ function showPasswordReset(req, res) {
 function passwordReset(req, res) {
   var email = req.body.email;
   var resetToken = myUtils.newUUID();
-  myUtils.getDbClient(function(err) {
-    res.render('passwordreset', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
-  }, function(client, done) {
+  myUtils.getDbClient(res, function(client, done) {
     client.query('update students set passwordResetToken = $1,passwordResetRequestTime = $2 where email = $3', [resetToken, new Date(), email], function(err, result) {
       done();
       if (err) {
-        res.render('passwordreset', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
+        console.error('problem setting password reset token', err);
+        res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
+        res.render('passwordreset');
       } else {
-        emailHelper.sendPasswordReset({email: email, name: email, resetToken: resetToken});
-        res.render('passwordreset', {message:'If an account with your email exists, you will receive an email shortly with instuctions to reset your password.'});
+        if (result.rowCount) {
+          emailHelper.sendPasswordReset({email: email, name: email, resetToken: resetToken});
+        }
+        res.locals.messages.push('If an account with your email exists, you will receive an email shortly with instuctions to reset your password.');
+        res.render('passwordreset');
       }
     });
   });
 }
 
 function myBooks(req, res) {
-  console.log('cookie', req.cookies && req.cookies['import-books']);
   var email = req.user.email;
-  myUtils.getDbClient(function(err) {
-    res.render('myBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
-  }, function(client, done) {
+  myUtils.getDbClient(res, function(client, done) {
     client.query('select * from bookList where email = $1 order by ownership', [email], function(err, result) {
       if (err) {
         done();
-        res.render('myBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
+        res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
+        res.render('myBooks');
       } else {
         var isbns = _.pluck(result.rows, 'isbn');
         async.parallel([
@@ -227,7 +256,8 @@ function myBooks(req, res) {
           }], function(err, results) {
             if (err) {
               console.error('error getting my books',err);
-              res.render('myBooks', {error: 'Sorry, we couldn\'t get your books right now. Please try again later'});
+              res.locals.errors.push('Sorry, we couldn\'t get your books right now. Please try again later');
+              res.render('myBooks');
             } else {
               res.render('myBooks', {books: results[1], school: {name: results[0].name, textbookLookupUrl: results[0].textbooklookupurl}});
             }
@@ -249,7 +279,7 @@ function addBooks(req, res) {
         var checkDig = (10 - (sum % 10)) % 10;
         isbn = util.format("978%s%d", isbn.substring(0, 9), checkDig);
       } else {
-        res.locals.error = 'Sorry, that is not a valid ISBN. Please provide an ISBN 10 or 13 number.';
+        res.locals.errors.push('Sorry, that is not a valid ISBN. Please provide an ISBN 10 or 13 number.');
         return myBooks(req, res);
       }
     }
@@ -257,13 +287,14 @@ function addBooks(req, res) {
       return res.send('not a valid ownership');
     }
     myUtils.getDbClient(function(err) {
-      res.render('myBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
+      res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
+      res.render('myBooks');
     }, function(client, done) {
       client.query('insert into bookList values ($1, $2, $3)', [req.user.email, isbn, ownership], function(err, result) {
         done();
         if (err) {
           console.error('problem adding new book', err);
-          res.locals.error = 'That didn\'t quite work. Make sure you haven\'t already added that book to your list';
+          res.locals.errors.push('That didn\'t quite work. Make sure you haven\'t already added that book to your list');
         }
         myBooks(req, res);
       });
@@ -272,28 +303,28 @@ function addBooks(req, res) {
     var ownership = req.body.own || req.body.selling || req.body.buying || req.body.remove;
     if (ownership === 'remove') {
       myUtils.getDbClient(function(err) {
-        res.locals.error = 'Sorry, we couldn\'t remove that book. Please try again';
+        res.locals.errors.push('Sorry, we couldn\'t remove that book. Please try again');
         return myBooks(req, res);
       }, function(client, done) {
         client.query('delete from bookList where email=$1 and isbn=$2', [req.user.email, isbn], function(err, result) {
           done();
           if (err) {
             console.error('problem removing book', err);
-            res.locals.error = 'Sorry, we couldn\'t remove that book. Please try again';
+            res.locals.errors.push('Sorry, we couldn\'t remove that book. Please try again');
           }
           myBooks(req, res);
         });
       });
     } else {
       myUtils.getDbClient(function(err) {
-        res.locals.error = 'Sorry, we couldn\'t update that book. Please try again.';
+        res.locals.errors.push('Sorry, we couldn\'t update that book. Please try again.');
         return myBooks(req, res);
       }, function(client, done) {
         client.query('update bookList set ownership=$1 where email=$2 and isbn=$3', [ownership, req.user.email, isbn], function(err, result) {
           done();
           if (err) {
             console.error('problem updating book', err);
-            res.locals.error = 'Sorry, we couldn\'t update that book. Please try again.';
+            res.locals.errors.push('Sorry, we couldn\'t update that book. Please try again.');
           }
           myBooks(req, res);
         });
@@ -302,14 +333,14 @@ function addBooks(req, res) {
   } else if (action === 'addTextbookLookupUrl') {
     var newTextbookLookupUrl = req.body.textbookLookupUrl;
     myUtils.getDbClient(function(err) {
-      res.locals.error = 'Sorry, we couldn\'t add your school\'s textbook lookup page. Please try again later.';
+      res.locals.errors.push('Sorry, we couldn\'t add your school\'s textbook lookup page. Please try again later.');
       return myBooks(req, res);
     }, function(client, done) {
       client.query('update schools set textbooklookupurl=$1 from students where students.email = $2 and students.schoolid = schools.schoolid', [newTextbookLookupUrl, req.user.email], function(err, result) {
         done();
         if (err) {
           console.error('problem updating schools textbook lookup url');
-          res.locals.error = 'Sorry, we couldn\'t add your school\'s textbook lookup page. Please try again later.';
+          res.locals.errors.push('Sorry, we couldn\'t add your school\'s textbook lookup page. Please try again later.');
         }
         return myBooks(req, res);
       });
@@ -325,7 +356,7 @@ function importBooks(req, res) {
     isbns = req.cookies && req.cookies['import-books'] && req.cookies['import-books'].isbns;
   }
   if (!(isbns && isbns.length)) {
-    req.flash('message', ['You don\'t have any books to import.']);
+    req.flash('message', 'You don\'t have any books to import.');
     if (req.user) {
       res.redirect('/mybooks');
     } else {
@@ -361,27 +392,28 @@ function importBooks(req, res) {
         done();
         if (err) {
           console.error('problem importing books', err);
-          req.flash('error', ['Sorry, something went terribly wrong and we couldn\'t import all of your books. Please try that again.']);
+          req.flash('error', 'Sorry, something went terribly wrong and we couldn\'t import all of your books. Please try that again.');
         } else {
           res.clearCookie('import-books');
           if (problems.length) {
-            req.flash('error', [problems.length+' books were not added because they are already in your book list.']);
+            req.flash('error', '%d books were not added because they are already in your book list.', problems.length);
           }
-          req.flash('message', [importIsbns.length-problems.length+' books were successfully imported!']);
+          req.flash('message', '%d books were successfully imported!', (importIsbns.length-problems.length));
         }
         res.redirect('/mybooks');
       });
     });
   } else {
     res.cookie('import-books', { isbns:importIsbns, time:new Date() });
-    req.flash('message', ['Please log in so we can add your books to your Book List!']);
+    req.flash('message', 'Please log in so we can add your books to your Book List!');
     res.redirect('/login/import');
   }
 }
 
 function findBooks(req, res) {
   myUtils.getDbClient(function(err) {
-    res.render('findBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
+    res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
+    res.render('findBooks');
   }, function(client, done) {
     async.parallel([
       function(callback) {
@@ -417,7 +449,8 @@ function findBooks(req, res) {
         done();
         if (err) {
           console.error('error finding books',err);
-          res.render('findBooks', {error:'Sorry, we\'re having some problems with the website right now. Please try again soon.'});
+          res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
+          res.render('findBooks');
         } else {
           for (var i = 0; i < results[1].length; i++) {
             // copy over the number of sellers for each book
@@ -440,7 +473,7 @@ function foundBook(req, res) {
     case 'message':
       var message = escape(req.body.message);
       myUtils.getDbClient(function(err) {
-        res.locals.error = 'Sorry, we\'re having some problems with the website right now. Please try again soon.';
+        res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
         findBooks(req, res);
       }, function(client, done) {
         client.query('select students.name,students.email from bookList,students where bookList.ownership = \'selling\' and bookList.email = students.email and students.schoolId = $2 and emailConfirmed and bookList.isbn = $1', [isbn, req.user.schoolid], function(err, result) {
@@ -457,7 +490,7 @@ function foundBook(req, res) {
           if (toPeople.length) {
             bookHelper.getBookInfo(isbn, function(err, book) {
               if (err) {
-                res.locals.error = 'Sorry, we\'re having trouble finding that book. Make sure you have a valid ISBN and please try again soon.';
+                res.locals.errors.push('Sorry, we\'re having trouble finding that book. Make sure you have a valid ISBN and please try again soon.');
                 return findBooks(req, res);
               }
               emailHelper.sendBookInquiryEmail({
@@ -469,16 +502,16 @@ function foundBook(req, res) {
               }, function(err, result) {
                 if (err) {
                   console.error('error sending inquiry email', err);
-                  res.locals.error = 'Sorry, there was a problem sending your email. Please try again soon.';
+                  res.locals.errors.push('Sorry, there was a problem sending your email. Please try again soon.');
                   findBooks(req, res);
                 } else {
-                  res.locals.message = 'Your email has been sent!';
+                  res.locals.messages.push('Your email has been sent!');
                   findBooks(req, res);
                 }
               });
             });
           } else {
-            res.locals.error = 'Sorry, no one is selling that book!';
+            res.locals.errors.push('Sorry, no one is selling that book!');
             findBooks(req, res);
           }
         });
