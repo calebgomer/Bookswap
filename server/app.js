@@ -104,7 +104,8 @@ app.get('/import', controller.import);
 app.post('/import', controller.import);
 
 // admin functions (must have ADMINS environment variable set)
-app.get('/admin/dashboard', loggedIn, ensureAdmin, admin.dashboard);
+app.get('/admin', loggedIn, ensureAdmin, admin.dashboard);
+app.post('/admin', loggedIn, ensureAdmin, admin.dashboard);
 
 // setup passport
 passport.use(new LocalLoginStrategy({usernameField:'email'},

@@ -1,1 +1,34 @@
-h3 Total Students: #{totalStudents}
+doctype html 5
+html(lang='en')
+  head
+    meta(name='viewport', content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no')
+    meta(name='title', content='Book Swap')
+    meta(name='description', content='A site for trading textbooks')
+    meta(name='keywords', content='book, books, textbook, textbooks, college, university, trade, swap, bookswap, swapbook, swapbooks, cheap')
+    link(rel='stylesheet', href='/stylesheets/styles.css')
+    link(href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css", rel="stylesheet")
+  body
+    .container
+      h3 Admin Stuff
+      form(action='/admin', method='post', role='form')
+        input(type='hidden', name='_csrf', value=csrfToken)
+        input(type='hidden', name='action', value='query')
+        input.form-control(type='text', name='query', placeholder='Database Query', value=results?'#{results.query}':'')
+      if errors
+        each error in errors
+          .alert.alert-danger
+            strong #{error}
+      if messages
+        each message in messages
+          .alert.alert-info
+            strong #{message}
+      if warnings
+        each warning in warnings
+          .alert.alert-warning
+            strong #{warning}
+      if results
+        .panel.panel-primary
+          .panel-heading #{results.rowCount} Results
+          .panel-body
+            each result in results.rows
+              p #{JSON.stringify(result)}
