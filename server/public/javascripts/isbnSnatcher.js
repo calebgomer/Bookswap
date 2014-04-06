@@ -34,10 +34,16 @@ function getIsbns() {
 }
 
 function importBooks() {
-  var form = $('<form action="https://book-swap.herokuapp.com/import" method="post"><input id="isbns" type="text" name="isbns"/></form>');
-  $("body").append(form);
-  $("#isbns").val(JSON.stringify(Object.keys(isbns)));
-  $(form).submit();
+  var form = document.createElement('form');
+  form.action = 'https://book-swap.herokuapp.com/import';
+  form.method = 'post';
+  var input = document.createElement('input');
+  input.type = 'hidden';
+  input.name = 'isbns';
+  input.value = JSON.stringify(Object.keys(isbns));
+  form.appendChild(input);
+  document.body.appendChild(form);
+  form.submit();
 }
 
 function getIsbn13s() {
