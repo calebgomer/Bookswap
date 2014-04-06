@@ -30,6 +30,6 @@ html(lang='en')
         .panel.panel-primary
           .panel-heading #{results.rowCount} Results
           .panel-body
-            if result.rows
+            if results.rows
               each result in results.rows
                 p #{JSON.stringify(result)}
