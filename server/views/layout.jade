@@ -40,7 +40,7 @@ html(lang='en')
     .container
       if errors
         each error in errors
-          #error.error.alert.alert-danger
+          .alert.alert-danger
             strong #{error}
       if messages
         each message in messages
