@@ -6,13 +6,13 @@ function dashboard(req, res) {
       var query = req.body.query;
       myUtils.getDbClient(res, function(client, done) {
         client.query(query, function(err, result) {
+          done();
+          result = result || {};
           if (err) {
             res.locals.errors.push(err);
           }
-          if (result) {
-            result.query = query;
-            res.locals.results = result;
-          }
+          result.query = query;
+          res.locals.results = result;
           res.render('admin/dashboard');
         });
       });
