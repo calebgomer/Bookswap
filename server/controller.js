@@ -202,28 +202,62 @@ function login(req, res) {
 }
 
 function showPasswordReset(req, res) {
+  res.locals.resetToken = req.params.resetToken;
   res.render('passwordreset');
 }
 
 function passwordReset(req, res) {
-  var email = req.body.email;
-  var resetToken = myUtils.newUUID();
-  myUtils.getDbClient(res, function(client, done) {
-    client.query('update students set passwordResetToken = $1,passwordResetRequestTime = $2 where email = $3', [resetToken, new Date(), email], function(err, result) {
-      done();
-      if (err) {
-        console.error('problem setting password reset token', err);
-        res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
-        res.render('passwordreset');
-      } else {
-        if (result.rowCount) {
-          emailHelper.sendPasswordReset({email: email, name: email, resetToken: resetToken});
-        }
-        res.locals.messages.push('If an account with your email exists, you will receive an email shortly with instuctions to reset your password.');
-        res.render('passwordreset');
-      }
-    });
-  });
+  var action = req.body.action;
+  switch (action) {
+    case 'sendEmail':
+      var email = req.body.email;
+      var resetToken = myUtils.newUUID();
+      myUtils.getDbClient(res, function(client, done) {
+        client.query('update students set passwordResetToken = $1,passwordResetRequestTime = $2 where email = $3', [resetToken, new Date(), email], function(err, result) {
+          done();
+          if (err) {
+            console.error('problem setting password reset token', err);
+            res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
+            res.render('passwordreset');
+          } else {
+            if (result.rowCount) {
+              emailHelper.sendPasswordReset({email: email, name: email, resetToken: resetToken});
+            }
+            res.locals.messages.push('If an account with your email exists, you will receive an email shortly with instuctions to reset your password.');
+            res.render('passwordreset');
+          }
+        });
+      });
+      break;
+    case 'resetPassword':
+      var resetToken = req.body.resetToken;
+      var newPassword = req.body.password;
+      hashNewPassword(newPassword, function(err, passwordStuff) {
+        myUtils.getDbClient(res, function(client, done) {
+          client.query('update students set password = $1,passwordResetToken = NULL where passwordResetToken = $2', [passwordStuff, resetToken], function(err, result) {
+            done();
+            if (err) {
+              console.error('problem resetting password', err);
+              res.locals.errors.push('Sorry, we couldn\'t reset your password. Please request a new email and try again.');
+              res.render('passwordreset');
+            } else {
+              if (result.rowCount) {
+                req.flash('message', 'Your password has been reset.');
+                res.redirect('/login');
+              } else {
+                res.locals.errors.push('Sorry, we couldn\'t reset your password. Please request a new email and try again.');
+                res.render('passwordreset');
+              }
+            }
+          });
+        });
+      });
+      break;
+    default:
+      res.locals.warnings.push('What on earth are you doing?');
+      res.render('passwordreset');
+      break;
+  }
 }
 
 function myBooks(req, res) {

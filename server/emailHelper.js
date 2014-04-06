@@ -63,8 +63,8 @@ function sendNewEmailConfirmation(arguments, callback) {
   sendEmail({toPeople: toPeople, subject: subject, html: emailHtml, text: emailText}, callback);
 }
 
-var passwordResetEmailText = 'Hi %s,\nIt looks like you made a request to reset your Book Swap password. To complete the process, please click the following link and choose a new password.\n\n%s/passwordreset/%s\n\nIf you did not request to reset your password please ignore this email and your password reset token will reset soon.\n\nThanks,\n%s';
-var passwordResetEmailHtml = '<p>Hi %s,</p><p>It looks like you made a request to reset your Book Swap password. To complete the process, please click the following link and choose a new password.</p><p>%s/passwordreset/%s</p><p>If you did not request to reset your password please ignore this email and your password reset token will reset soon.</p><p>Thanks,<br>%s</p>';
+var passwordResetEmailText = 'Hi %s,\nIt looks like you made a request to reset your Book Swap password. To complete the process, please click the following link and choose a new password.\n\n%s/passwordreset/%s\n\nIf you did not request to reset your password please ignore this email and your password reset token will invalidate soon.\n\nThanks,\n%s';
+var passwordResetEmailHtml = '<p>Hi %s,</p><p>It looks like you made a request to reset your Book Swap password. To complete the process, please click the following link and choose a new password.</p><p>%s/passwordreset/%s</p><p>If you did not request to reset your password please ignore this email and your password reset token will invalidate soon.</p><p>Thanks,<br>%s</p>';
 
 function sendPasswordReset(arguments, callback) {
   var toPeople = [{

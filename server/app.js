@@ -83,6 +83,7 @@ app.get('/join', controller.join);
 app.post('/join', controller.createAccount);
 app.get('/confirm/:confirmationId', controller.confirmEmail);
 app.get('/passwordreset', controller.showPasswordReset);
+app.get('/passwordreset/:resetToken', controller.showPasswordReset);
 app.post('/passwordreset', controller.passwordReset);
 app.get('/login', controller.login);
 app.get('/login/*', controller.login);
