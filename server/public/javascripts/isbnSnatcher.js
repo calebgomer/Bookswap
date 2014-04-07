@@ -1,8 +1,3 @@
-if (location.href.indexOf('book-swap.herokuapp.com') !== -1) {
-  alert('Oops, you clicked it! Try dragging it into your bookmarks, or drag it onto the bookmarks bar.');
-  return;
-}
-
 var validatorScript = document.createElement('script');
 validatorScript.type = 'text/javascript';
 validatorScript.src = 'http://book-swap.herokuapp.com/javascripts/validator.min.js';
