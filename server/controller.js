@@ -50,11 +50,9 @@ function createAccount(req, res) {
         if (err) {
           if (err.code === '23505') {
             done();
-            console.log('user exists');
             res.locals.errors.push('Sorry, an account with this email already exists.');
             res.render('join');
           } else if (err.code === '23503') {
-            console.log('new school! create entry in school table');
             client.query('insert into schools (schoolId) values ($1)', [schoolId], function(err, result) {
               if (err) {
                 done();
@@ -62,7 +60,6 @@ function createAccount(req, res) {
                 res.locals.errors.push('Sorry, we weren\'t able to create your account. Please try again soon.');
                 return res.render('join');
               }
-              console.log('created new school', result);
               client.query(insertQuery, insertParams, function(err, result) {
                 done();
                 if (err) {
@@ -70,7 +67,6 @@ function createAccount(req, res) {
                   res.locals.errors.push('Sorry, we weren\'t able to create your account. Please try again soon.');
                   return res.render('join');
                 }
-                console.log('added new user after creating new school', result);
                 emailHelper.sendNewEmailConfirmation({name: name, email: email, confirmationId: confirmationId});
                 res.render('joinSuccess', {name: name, email: email});
               });
@@ -83,7 +79,6 @@ function createAccount(req, res) {
           }
         } else {
           done();
-          console.log('added new user', result);
           emailHelper.sendNewEmailConfirmation({name: name, email: email, confirmationId: confirmationId});
           res.render('joinSuccess', {name: name, email: email});
         }
@@ -162,10 +157,9 @@ function hashPasswordWithIterationsAndKeylen(password, salt, iterations, keylen,
 
 function confirmEmail(req, res) {
   var confirmationId = req.params.confirmationId;
-  console.log(confirmationId);
   accountHelper.confirmEmail(confirmationId, function(err, result) {
-    console.log(err);
     if (err) {
+      console.error(err);
       req.flash('error', err);
       res.redirect('/account');
     } else {
@@ -419,7 +413,6 @@ function importBooks(req, res) {
           if (err && err.code === '23505') {
             problems.push('ISBN '+isbn+": This book is already in your Book List");
           }
-          console.log('insert', result && result.rowCount, 'errs:', err);
           callback(undefined, result);
         });
       }, function(err) {
@@ -501,8 +494,6 @@ function findBooks(req, res) {
 function foundBook(req, res) {
   var action = req.body.action;
   var isbn = req.body.isbn;
-  console.log('isbn',isbn);
-  console.log('message', req.body.message);
   switch(action) {
     case 'message':
       var message = escape(req.body.message);
@@ -512,7 +503,6 @@ function foundBook(req, res) {
       }, function(client, done) {
         client.query('select students.name,students.email from bookList,students where bookList.ownership = \'selling\' and bookList.email = students.email and students.schoolId = $2 and emailConfirmed and bookList.isbn = $1', [isbn, req.user.schoolid], function(err, result) {
           done();
-          console.log('peeps', JSON.stringify(result.rows));
           var toPeople = [];
           for (var i = 0; i < result.rows.length; i++) {
             toPeople.push({
@@ -533,15 +523,13 @@ function foundBook(req, res) {
                 message: message,
                 title: book.title,
                 isbn: book.isbn
-              }, function(err, result) {
-                if (err) {
-                  console.error('error sending inquiry email', err);
-                  res.locals.errors.push('Sorry, there was a problem sending your email. Please try again soon.');
-                  findBooks(req, res);
-                } else {
-                  res.locals.messages.push('Your email has been sent!');
-                  findBooks(req, res);
-                }
+              }, function(result) {
+                res.locals.messages.push('Your email has been sent!');
+                findBooks(req, res);
+              }, function(err) {
+                console.error('error sending inquiry email', err);
+                res.locals.errors.push('Sorry, there was a problem sending your email. Please try again soon.');
+                findBooks(req, res);
               });
             });
           } else {
