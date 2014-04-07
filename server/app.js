@@ -168,7 +168,6 @@ function ensureAdmin(req, res, next) {
       }
     }
   }
-  req.flash('warning', 'You are not authorized to use that.');
   res.redirect('/');
 }
 
