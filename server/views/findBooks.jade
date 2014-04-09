@@ -23,7 +23,7 @@ block content
             input(type='hidden', name='_csrf', value=csrfToken)
             input(type='hidden', name='isbn')
             input(type='hidden', name='action', value='message')
-            textarea.form-control(rows='4', name='message', placeholder='Any other details you would like to add...')
+            textarea.form-control(rows='4', name='message', placeholder='Any other details you would like to add, like book condition questions or what you\'re willing to pay...')
             p Thanks!
             p #{user.name} (#{user.email})
             h4
@@ -71,8 +71,10 @@ block content
                   else
                     | is
                   | &nbsp;selling a copy. Press "Contact" to send a message.
+                p You can check these sites for reasonable prices before making an offer.
               else
                 p It doesn't look like anybody at your school is selling this book right now. Check back soon!
+                p You probably buy it on one of these sites if you can't wait.
               //- .amazon-pricing.hidden-sm.hidden-xs
                 if book.amazonLowestNewPrice && book.amazonLowestUsedPrice
                   p Amazon currently has used copies starting at&nbsp;
@@ -94,30 +96,30 @@ block content
               br
             .row.col-sm-12
               if book.numSellers
-                .col-md-2.col-sm-6
+                .col-md-2.col-sm-6.col-xs-6
                   button.btn.btn-success.btn-block(type='button', onclick='contactSellers("#{book.isbn}", "#{book.title}");') Contact
                   br
-              .col-md-2.col-sm-6
+              .col-md-2.col-sm-6.col-xs-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.abebooks.com/book-search/isbn/#{book.isbn}");') Abe Books
                 br
-              .col-md-2.col-sm-6
+              .col-md-2.col-sm-6.col-xs-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.alibris.com/search/books/isbn/#{book.isbn}");') Alibris
                 br
-              //- .col-md-2.col-sm-6.hidden-sm.hidden-xs
+              //- .col-md-2.col-sm-6.col-xs-6.hidden-sm.hidden-xs
               //-   button.btn.btn-primary.btn-block(type='button', onclick='window.open("#{book.offerPage}");') Amazon
-              .col-md-2.col-sm-6
+              .col-md-2.col-sm-6.col-xs-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.amazon.com/s/?field-keywords=#{book.isbn}");') Amazon
                 br
-              .col-md-2.col-sm-6
+              .col-md-2.col-sm-6.col-xs-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.chegg.com/search/#{book.isbn}");') Chegg
                 br
-              .col-md-2.col-sm-6
+              .col-md-2.col-sm-6.col-xs-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.ebay.com/sch/?_nkw=#{book.isbn}");') Ebay
                 br
-              .col-md-2.col-sm-6
+              .col-md-2.col-sm-6.col-xs-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("https://www.google.com/#q=#{book.isbn}&tbm=shop");') Google
                 br
-              .col-md-2.col-sm-6
+              .col-md-2.col-sm-6.col-xs-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.half.ebay.com/search?isbn=#{book.isbn}");') Half.com
                 br
   else

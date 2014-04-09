@@ -48,51 +48,46 @@ block content
       - var lastBookOwnership;
       each book in books
         if lastBookOwnership !== book.ownership
-          br
-          hr
-          case book.ownership
-            when 'own'
-              h2.text-center-xs Books You Own
-            when 'selling'
-              h2.text-center-xs Books You're Selling
-            when 'buying'
-              h2.text-center-xs Books You're Buying
-        hr
-        - lastBookOwnership = book.ownership
-        .container
-          .book
+          .container.col-sm-12
+            br
+            hr
+            case book.ownership
+              when 'own'
+                h2.text-center-xs Books You Own
+              when 'selling'
+                h2.text-center-xs Books You're Selling
+              when 'buying'
+                h2.text-center-xs Books You're Buying
+          - lastBookOwnership = book.ownership
+        .col-xs-12.col-sm-6
+          .col-md-4.col-sm-6.col-xs-12.text-center
+            if book.image
+              img.img-rounded(src='#{book.image}')
+          .col-md-8.col-sm-6.col-xs-12
+            .row.text-center-xs
+              .title
+                h4 #{book.title}
+                p by #{book.authors}
+                p ISBN: #{book.isbn}
             .row
-              .col-md-2.col-sm-3.col-xs-12.text-center
-                if book.image
-                  img.img-rounded(src='#{book.image}')
-              .col-md-10.col-sm-9.col-xs-12
-                .row.text-center-xs
-                  .title
-                    h4 #{book.title}
-                      br.visible-xs
-                      small &nbsp;by #{book.authors}
-                    p ISBN: #{book.isbn}
-                br
-                .row
-                  form(action='/mybooks', role='form', method='post')
-                    input(type='hidden', name='_csrf', value=csrfToken)
-                    input(type='hidden', name='action', value='modifyBook')
-                    input(type='hidden', name='isbn', value=book.isbn)
-                    if book.ownership !== 'own'
-                      .col-sm-4.col-xs-4
-                        button.btn.btn-default.btn-block(type='submit', name='own', value='own') Own
-                        br.visible-xs
-                    if book.ownership !== 'selling'
-                      .col-sm-4.col-xs-4
-                        button.btn.btn-default.btn-block(type='submit', name='selling', value='selling') Selling
-                        br.visible-xs
-                    if book.ownership !== 'buying'
-                      .col-sm-4.col-xs-4
-                        button.btn.btn-default.btn-block(type='submit', name='buying', value='buying') Buying
-                        br.visible-xs
-                    .col-sm-4.col-xs-4
-                      button.btn.btn-danger.btn-block(type='submit', name='remove', value='remove') Remove
-                      br.visible-xs
+                form(action='/mybooks', role='form', method='post')
+                  input(type='hidden', name='_csrf', value=csrfToken)
+                  input(type='hidden', name='action', value='modifyBook')
+                  input(type='hidden', name='isbn', value=book.isbn)
+                  if book.ownership !== 'own'
+                    .col-sm-12.col-xs-4
+                      button.btn.btn-default.btn-block(type='submit', name='own', value='own') Own
+                  if book.ownership !== 'selling'
+                    .col-sm-12.col-xs-4
+                      button.btn.btn-default.btn-block(type='submit', name='selling', value='selling') Selling
+                  if book.ownership !== 'buying'
+                    .col-sm-12.col-xs-4
+                      button.btn.btn-default.btn-block(type='submit', name='buying', value='buying') Buying
+                  .col-sm-12.col-xs-4
+                    br.hidden-xs
+                    button.btn.btn-danger.btn-block(type='submit', name='remove', value='remove') Remove
+      br
+      br
       br
     else
       h3 You don't have any books yet. Please add some books!
