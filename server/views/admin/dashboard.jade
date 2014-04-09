@@ -18,19 +18,24 @@ html(lang='en')
                 - var usagePercent = (api.usage/api.limit*100).toFixed(2)
                 p
                   strong #{apiName}
-                  | &nbsp;#{api.usage}/#{api.limit} (#{usagePercent}%)
-                .progress
-                  .progress-bar(role='progressbar', class=(usagePercent>=75?(usagePercent>=90?'progress-bar-danger':'progress-bar-warning'):'progress-bar-success'), aria-valuenow='13', aria-valuemin='0', aria-valuemax='100', style='width:#{usagePercent}%;')
+                  if api.limit
+                    | &nbsp;#{api.usage}/#{api.limit} (#{usagePercent}%)
+                if api.link
+                  button.btn.btn-primary.form-control(type='button', onclick='window.open("#{api.link}");') Check Status
+                if api.limit
+                  .progress
+                    .progress-bar(role='progressbar', class=(usagePercent>=75?(usagePercent>=90?'progress-bar-danger':'progress-bar-warning'):'progress-bar-success'), aria-valuenow='13', aria-valuemin='0', aria-valuemax='100', style='width:#{usagePercent}%;')
         .row
           if featureFlags
             h3 Feature Flags
-            each flagEnabled,flagName in featureFlags
-              form(action='/admin', method='post', role='form')
-                input(type='hidden', name='_csrf', value=csrfToken)
-                input(type='hidden', name='action', value='toggleFlag')
-                input(type='hidden', name='flagName', value=flagName)
-                input(type='hidden', name='flagValue', value=flagEnabled==='off'?'on':'off')
-                button.form-control.btn(type='submit', name='submit', class=flagEnabled==='off'?'btn-danger':'btn-success') #{flagName}
+            .col-xs-12.col-md-12
+              each flagEnabled,flagName in featureFlags
+                form(action='/admin', method='post', role='form')
+                  input(type='hidden', name='_csrf', value=csrfToken)
+                  input(type='hidden', name='action', value='toggleFlag')
+                  input(type='hidden', name='flagName', value=flagName)
+                  input(type='hidden', name='flagValue', value=flagEnabled==='off'?'on':'off')
+                  button.form-control.btn(type='submit', name='submit', class=flagEnabled==='off'?'btn-danger':'btn-success') #{flagName}
       .col-md-8.col-sm-12.col-xs-12
         h3 Database Console
         form(action='/admin', method='post', role='form')

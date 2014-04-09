@@ -9,8 +9,8 @@ var flags = {
 };
 var apis = {
   'Mandrill': { usage:0, limit:12000 },
-  'Google': { usage:"?", limit:1000, link:'https://code.google.com/apis/console/b/0/?noredirect#project:50327074689:quotas' },
-  'Amazon': { usage:"∞", limit:"∞" }
+  'Google': { link:'https://code.google.com/apis/console/b/0/?noredirect#project:50327074689:quotas' },
+  // 'Amazon': { }
 };
 function dashboard(req, res) {
   async.parallel([
