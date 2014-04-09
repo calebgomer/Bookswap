@@ -73,34 +73,24 @@ block content
                   | &nbsp;selling a copy. Press "Contact" to send a message.
               else
                 p It doesn't look like anybody at your school is selling this book right now. Check back soon!
-              .online-pricing
-                if book.lowestNewPrice && book.lowestUsedPrice
-                  p.hidden-xs Amazon currently has used copies starting at&nbsp;
-                    strong #{book.lowestUsedPrice}
+              //- .amazon-pricing.hidden-sm.hidden-xs
+                if book.amazonLowestNewPrice && book.amazonLowestUsedPrice
+                  p Amazon currently has used copies starting at&nbsp;
+                    strong #{book.amazonLowestUsedPrice}
                     | &nbsp;and new copies starting at&nbsp;
-                    strong #{book.lowestNewPrice}
+                    strong #{book.amazonLowestNewPrice}
                     | .
-                  p.visible-xs
-                    strong #{book.lowestUsedPrice}
-                    | + for used copies on Amazon
-                  - lowestPrice = book.lowestUsedPrice;
-                else if book.lowestNewPrice
-                  - lowestPrice = book.lowestNewPrice;
-                  p.hidden-xs Amazon currently has new copies starting at&nbsp;
-                    strong #{book.lowestNewPrice}
+                  - lowestPrice = book.amazonLowestUsedPrice;
+                else if book.amazonLowestNewPrice
+                  - lowestPrice = book.amazonLowestNewPrice;
+                  p Amazon currently has new copies starting at&nbsp;
+                    strong #{book.amazonLowestNewPrice}
                     | .
-                  p.visible-xs
-                    strong #{book.lowestNewPrice}
-                    | + for new copies on Amazon
-                else if book.lowestUsedPrice
-                  - lowestPrice = book.lowestUsedPrice;
-                  p.hidden-xs Amazon currently has used copies starting at&nbsp;
-                    strong #{book.lowestUsedPrice}
+                else if book.amazonLowestUsedPrice
+                  - lowestPrice = book.amazonLowestUsedPrice;
+                  p Amazon currently has used copies starting at&nbsp;
+                    strong #{book.amazonLowestUsedPrice}
                     | .
-                  p.visible-xs
-                    strong #{book.lowestUsedPrice}
-                    | + for used copies on Amazon.
-                p.hidden-xs You can probably find this book online elsewhere, too. The links below should get you started.
               br
             .row.col-sm-12
               if book.numSellers
@@ -113,8 +103,10 @@ block content
               .col-md-2.col-sm-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.alibris.com/search/books/isbn/#{book.isbn}");') Alibris
                 br
+              //- .col-md-2.col-sm-6.hidden-sm.hidden-xs
+              //-   button.btn.btn-primary.btn-block(type='button', onclick='window.open("#{book.offerPage}");') Amazon
               .col-md-2.col-sm-6
-                button.btn.btn-primary.btn-block(type='button', onclick='window.open("#{book.offerPage}");') Amazon
+                button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.amazon.com/s/?field-keywords=#{book.isbn}");') Amazon
                 br
               .col-md-2.col-sm-6
                 button.btn.btn-primary.btn-block(type='button', onclick='window.open("http://www.chegg.com/search/#{book.isbn}");') Chegg

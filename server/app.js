@@ -18,9 +18,6 @@ var myUtils = require('./myUtils');
 
 var Mandrill = require('mandrill-api/mandrill');
 var m = new Mandrill.Mandrill();
-m.users.info(function(info) {
-    console.log('Reputation: ' + info.reputation + ', Hourly Quota: ' + info.hourly_quota);
-});
 
 app.configure(function() {
   app.set('views', __dirname + '/views');

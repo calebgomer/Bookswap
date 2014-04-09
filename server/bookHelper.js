@@ -27,7 +27,7 @@ var makeGoogleBookQuery = function(searchText, callback) {
 };
 
 var makeGoogleQuery = function(searchIsbn, searchText, callback) {
-  var gQuery = '/books/v1/volumes?q=%s&maxResults=%s&printType=books&country=us&key=%s&fields=items(volumeInfo/title,volumeInfo/subtitle,volumeInfo/authors)';
+  var gQuery = '/books/v1/volumes?q=%s&maxResults=%s&printType=books&country=us&key=%s&fields=items(volumeInfo/title,volumeInfo/subtitle,volumeInfo/authors,volumeInfo/imageLinks,saleInfo)';
   var query;
   var maxResults;
 
@@ -139,22 +139,44 @@ function getBookInfo(isbn, callback) {
           book.authors = ['(No Authors Found)'];
         }
         try {
-          book.image = results[1].ItemLookupResponse.Items[0].Item[0].MediumImage[0].URL[0];
+          // get image from google to remove mobile restrictions of amazon api
+          book.image = results[0].items[0].volumeInfo.imageLinks.thumbnail || results[0].items[0].volumeInfo.imageLinks.small;
+          // book.image = results[1].ItemLookupResponse.Items[0].Item[0].MediumImage[0].URL[0];
         } catch (err) {
           book.image = undefined;
         }
+        // get prices from google (if possible) to remove mobile restrictions of amazon api
         try {
-          book.lowestNewPrice = results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestNewPrice[0].FormattedPrice[0];
+          if (results[0].items[0].saleInfo.listPrice.currencyCode === 'USD') {
+            book.googleListPrice = util.format('$%d', results[0].items[0].saleInfo.listPrice.amount);
+          }
         } catch (err) {
         }
         try {
-          book.lowestUsedPrice = results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestUsedPrice[0].FormattedPrice[0];
+          if (results[0].items[0].saleInfo.retailPrice.currencyCode === 'USD') {
+            book.googleRetailPrice = util.format('$%d', results[0].items[0].saleInfo.retailPrice.amount);
+          }
         } catch (err) {
         }
         try {
-          book.offerPage = results[1].ItemLookupResponse.Items[0].Item[0].Offers[0].MoreOffersUrl[0];
+          if (book.googleListPrice || book.googleRetailPrice) {
+            book.googleBuyLink = results[0].items[0].saleInfo.buyLink;
+          }
         } catch (err) {
         }
+        // removing amazon prices for now because amazon's api rules suck
+        // try {
+        //   book.amazonLowestNewPrice = results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestNewPrice[0].FormattedPrice[0];
+        // } catch (err) {
+        // }
+        // try {
+        //   book.amazonLowestUsedPrice = results[1].ItemLookupResponse.Items[0].Item[0].OfferSummary[0].LowestUsedPrice[0].FormattedPrice[0];
+        // } catch (err) {
+        // }
+        // try {
+        //   book.amazonOfferPage = results[1].ItemLookupResponse.Items[0].Item[0].Offers[0].MoreOffersUrl[0];
+        // } catch (err) {
+        // }
         booksData.insert(book, console.log);
         callback(undefined, book);
     });
