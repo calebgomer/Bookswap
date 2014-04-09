@@ -9,22 +9,28 @@ block content
       h1 Welcome to Book Swap!
   if !user
       .text-center
-      .col-xs-6
-        button.btn.btn-primary.form-control(type='button', onclick='location.href="/login"') Login
-      .col-xs-6
-        button.btn.btn-success.form-control(type='button', onclick='location.href="/join"') Join
-      br
-      br
-      h4 Tired of paying too much at the bookstore, only to get pennies when you sell your books back?
-      h4 Forget to buy books until the last minute so you can't order them online?
-      p Try Book Swap, a better way to buy and sell your textbooks.
-      p Book Swap helps you find other students on campus who need your used books! You get to negotiate prices, not the book store.
-      .visible-xs
-        br
+        .visible-xs
+          .col-xs-6
+            button.btn.btn-primary.form-control(type='button', onclick='location.href="/login"') Login
+          .col-xs-6
+            button.btn.btn-success.form-control(type='button', onclick='location.href="/join"') Join
+          br
+          br
+        h4 Tired of paying too much at the bookstore, only to get pennies when you sell your books back?
+        h4 Forget to buy books until the last minute so you can't order them online?
+        p Try Book Swap, a better way to buy and sell your textbooks.
+        p Book Swap helps you find other students on campus who need your used books! You get to negotiate prices, not the book store.
+        .visible-xs
+          br
+        .hidden-xs
+          .col-xs-6
+            button.btn.btn-primary.form-control(type='button', onclick='location.href="/login"') Login
+          .col-xs-6
+            button.btn.btn-success.form-control(type='button', onclick='location.href="/join"') Join
   if user
     span.glyphicon.glyphicon-arrow-up.pull-right.visible-xs(style='font-size:3em;')
     p.visible-xs (You can also get to your Book List and Buy Books using the navigation bar. Just press the button up there)
-    .text-center-xs
+    .text-center
       .col-xs-12.col-md-6
         h4 Book List
         p Go to your Book List to add which books you are buying or selling. You can also add books you own but aren't selling. When you're done with a book, you can always move it to your selling list.
