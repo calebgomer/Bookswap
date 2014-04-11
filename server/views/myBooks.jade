@@ -8,7 +8,7 @@ block content
           form(action='/mybooks', role='form', method='post', onsubmit='return document.getElementById("newBookIsbn").value ? true : false;')
             input(type='hidden', name='_csrf', value=csrfToken)
             input(type='hidden', name='action', value='addBook')
-            input.form-control(type='text', name='isbn', id='newBookIsbn', placeholder='Book ISBN Number')
+            input.form-control.focus-me(type='text', name='isbn', id='newBookIsbn', placeholder='Book ISBN Number')
             br
             select.form-control(name='newBookOwnership')
               option(value='buying') I want to buy this book
