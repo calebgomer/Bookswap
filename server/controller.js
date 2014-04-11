@@ -226,6 +226,16 @@ function passwordReset(req, res) {
     case 'resetPassword':
       var resetToken = req.body.resetToken;
       var newPassword = req.body.password;
+      if (!resetToken) {
+        res.locals.errors.push('Sorry, we couldn\'t reset your password. Please request a new email and try again.');
+        req.params.resetToken = resetToken;
+        return showPasswordReset(req, res);
+      }
+      if (!(newPassword && newPassword.length >= 8)) {
+        res.locals.errors.push('Please choose a password that\'s at least 8 characters.');
+        req.params.resetToken = resetToken;
+        return showPasswordReset(req, res);
+      }
       hashNewPassword(newPassword, function(err, passwordStuff) {
         myUtils.getDbClient(res, function(client, done) {
           client.query('update students set password = $1,passwordResetToken = NULL where passwordResetToken = $2', [passwordStuff, resetToken], function(err, result) {
