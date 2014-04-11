@@ -24,7 +24,8 @@ app.configure(function() {
   app.use(express.static(path.join(__dirname, 'public')));
   app.set('view engine', 'jade');
   app.use(express.cookieParser());
-  app.use(express.bodyParser());
+  app.use(express.json());
+  app.use(express.urlencoded());
   app.use(express.session({secret:process.env.SESSION_SECRET}));
   app.use(customCsrf);
   app.use(passport.initialize());
