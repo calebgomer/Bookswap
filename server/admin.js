@@ -46,6 +46,9 @@ function dashboard(req, res) {
         switch(req.body.action) {
           case 'query':
             var query = req.body.query;
+            if (!query) {
+              return callback();
+            }
             myUtils.getDbClient(res, function(client, done) {
               client.query(query, function(err, result) {
                 done();
