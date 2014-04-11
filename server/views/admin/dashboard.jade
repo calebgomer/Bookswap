@@ -36,6 +36,14 @@ html(lang='en')
                   input(type='hidden', name='flagName', value=flagName)
                   input(type='hidden', name='flagValue', value=flagEnabled==='off'?'on':'off')
                   button.form-control.btn(type='submit', name='submit', class=flagEnabled==='off'?'btn-danger':'btn-success') #{flagName}
+        .row
+          if funFacts
+            h3 Fun Facts
+            .col-xs-12.col-md-12
+              each fact,factName in funFacts
+                p
+                  strong #{factName}
+                  | &nbsp;#{fact}
       .col-md-8.col-sm-12.col-xs-12
         h3 Database Console
         form(action='/admin', method='post', role='form')

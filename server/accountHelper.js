@@ -7,7 +7,6 @@ function confirmEmail(confirmationId, callback) {
   myUtils.getDbClient(function(err) {
     return callback('Our site is having issues, please try again.');
   }, function(client, done) {
-    console.log(confirmationId);
     client.query('update students set emailConfirmed = true where emailConfirmationId = $1', [confirmationId], function(err, result) {
       done();
       if (err) {
