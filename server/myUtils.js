@@ -8,7 +8,7 @@ function getDbClient(fail, success) {
       if (typeof fail === 'function') {
         return fail({status:500, error: 'Our database is having trouble, please try again soon.'});
       } else if (typeof fail === 'object') {
-        return fail.render('epicfail');
+        return fail.render('epicfail', { errors: ['Our database is having trouble, please try again soon.']});
       }
     }
     success(client, done);

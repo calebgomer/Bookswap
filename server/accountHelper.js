@@ -1,7 +1,4 @@
-var validator = require('validator');
 var myUtils = require('./myUtils');
-var util = require('util');
-var crypto = require('crypto');
 
 function confirmEmail(confirmationId, callback) {
   myUtils.getDbClient(function(err) {

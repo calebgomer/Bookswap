@@ -98,8 +98,8 @@ app.get('/findbooks', loggedIn, controller.findBooks);
 app.post('/findbooks', loggedIn, controller.foundBook);
 app.get('/account', loggedIn, controller.getAccount);
 app.post('/account', loggedIn, controller.getAccount);
-app.get('/import', controller.import);
-app.post('/import', controller.import);
+app.get('/import', controller.importBooks);
+app.post('/import', controller.importBooks);
 
 // admin functions (must have ADMINS environment variable set)
 app.get('/admin', loggedIn, ensureAdmin, admin.dashboard);

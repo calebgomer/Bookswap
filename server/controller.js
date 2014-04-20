@@ -10,38 +10,78 @@ var async = require('async');
 require('buffertools').extend();
 var escape = require('escape-html');
 
+// renders templates
+function _render(res, template, locals) {
+  if (!res) {
+    console.error('cannot render without a response object');
+    return;
+  }
+  if (template) {
+    res.render(template, locals);
+  } else {
+    res.locals.errors.push('No template was specified.');
+    res.render('epicfail', locals);
+  }
+}
+
+// redirects responses
+function _redirect(res, path) {
+  if (res) {
+    if (path) {
+      res.redirect(path);
+    } else {
+      console.error('no path to redirect to');
+    }
+  } else {
+    console.error('no response to redirect');
+  }
+}
 
 function join(req, res) {
-  res.render('join');
+  _join(req, res, _render);
+}
+function _join(req, res, render) {
+  render(res, 'join');
 }
 
 function createAccount(req, res) {
+  _createAccount(req, res, _render);
+}
+function _createAccount(req, res, render) {
+  var name = escape(req.body.name);
   var email = req.body.email;
   var password = req.body.password;
-  var name = escape(req.body.name);
-  if (email.indexOf(".edu", email.length - 4) == -1) {
-    res.locals.errors.push('You must use a .edu email address');
-    return res.render('join');
+  if (!(name && name.length && name !== 'undefined')) {
+    res.locals.errors.push('Please provide your name');
+    return render(res, 'join');
   }
-  if (!password || password.length < 8) {
-    res.locals.errors.push('You must use a password with at least 8 charaters');
-    return res.render('join');
+  if (!(email && email.length)) {
+    res.locals.errors.push('Please provide an email address');
+    return render(res, 'join');
+  }
+  if (email.indexOf(".edu", email.length - 4) == -1) {
+    res.locals.errors.push('Please use an email address ending with ".edu"');
+    return render(res, 'join');
   }
   var schoolId = email.substring(email.indexOf('@')+1);
-  if (!name || !schoolId) {
-    res.locals.errors.push('You must choose a name and pick your school');
-    return res.render('join');
+  if (!schoolId) {
+    res.locals.errors.push('Please provide a real email');
+    return render(res, 'join');
+  }
+  if (!password || password.length < 8) {
+    res.locals.errors.push('Please use a password with at least 8 charaters');
+    return render(res, 'join');
   }
   hashNewPassword(password, function(err, result) {
     if (err) {
       console.error('error hashing new password', err);
       res.locals.errors.push('Our site is having issues, please try again');
-      return res.render('join');
+      return render(res, 'join');
     }
     var passwordStuff = result;
     myUtils.getDbClient(function(err) {
       res.locals.errors.push('Our site is having issues, please try again');
-      return res.render('join');
+      return render(res, 'join');
     }, function(client, done) {
       var confirmationId = myUtils.newUUID();
       var insertQuery = 'insert into students (email, password, name, schoolId, emailConfirmationId) values ($1, $2, $3, $4, $5)';
@@ -51,36 +91,36 @@ function createAccount(req, res) {
           if (err.code === '23505') {
             done();
             res.locals.errors.push('Sorry, an account with this email already exists.');
-            res.render('join');
+            render(res, 'join');
           } else if (err.code === '23503') {
             client.query('insert into schools (schoolId) values ($1)', [schoolId], function(err, result) {
               if (err) {
                 done();
                 console.error('problem creating new school', err);
                 res.locals.errors.push('Sorry, we weren\'t able to create your account. Please try again soon.');
-                return res.render('join');
+                return render(res, 'join');
               }
               client.query(insertQuery, insertParams, function(err, result) {
                 done();
                 if (err) {
                   console.error('problem adding user after creating new school', err);
                   res.locals.errors.push('Sorry, we weren\'t able to create your account. Please try again soon.');
-                  return res.render('join');
+                  return render(res, 'join');
                 }
                 emailHelper.sendNewEmailConfirmation({name: name, email: email, confirmationId: confirmationId});
-                res.render('joinSuccess', {name: name, email: email});
+                render(res, 'joinSuccess', {name: name, email: email});
               });
             });
           } else {
             done();
             console.error('problem inserting new user with code', err.code, err);
             res.locals.errors.push('Our site is having issues, please try again.');
-            res.render('join');
+            render(res, 'join');
           }
         } else {
           done();
           emailHelper.sendNewEmailConfirmation({name: name, email: email, confirmationId: confirmationId});
-          res.render('joinSuccess', {name: name, email: email});
+          render(res, 'joinSuccess', {name: name, email: email});
         }
       });
     });
@@ -115,13 +155,13 @@ function authenticateUser(email, password, callback) {
                   delete user.password;
                   callback(null, user);
                 } else {
-                  callback('Your email or password are incorrect');
+                  callback('Your email or password is incorrect');
                 }
               }
             }
           );
         } else {
-          callback('Your email or password are incorrect');
+          callback('Your email or password is incorrect');
         }
       }
     });
@@ -156,20 +196,26 @@ function hashPasswordWithIterationsAndKeylen(password, salt, iterations, keylen,
 }
 
 function confirmEmail(req, res) {
+  _confirmEmail(req, res, _redirect);
+}
+function _confirmEmail(req, res, redirect) {
   var confirmationId = req.params.confirmationId;
   accountHelper.confirmEmail(confirmationId, function(err, result) {
     if (err) {
       console.error(err);
       req.flash('error', err);
-      res.redirect('/account');
+      redirect(res, '/account');
     } else {
       req.flash('message', 'Your email address has been confirmed!');
-      res.redirect('/account');
+      redirect(res, '/account');
     }
   });
 }
 
 function getAccount(req, res) {
+  _getAccount(req, res, _render);
+}
+function _getAccount(req, res, render) {
   if (req.body && req.body.resendConfirmationEmail) {
     var confirmationId = myUtils.newUUID();
     myUtils.getDbClient(res, function(client, done) {
@@ -181,26 +227,37 @@ function getAccount(req, res) {
           emailHelper.sendNewEmailConfirmation({ name:req.user.name, email:req.user.email, confirmationId:confirmationId });
           res.locals.messages.push(util.format('We sent another confirmation email to %s.', req.user.email));
         }
-        res.render('account');
+        render(res, 'account');
       });
     });
   } else {
-    res.render('account');
+    render(res, 'account');
   }
 }
 
 function login(req, res) {
-  // removes the '/login' from the path, the rest is the destination
-  res.locals.destination = req.path.substring(6);
-  res.render('login');
+  _login(req, res, _render);
+}
+function _login(req, res, render) {
+  if (req.path.length >= 6) {
+    // removes the '/login' from the path, the rest is the destination
+    res.locals.destination = req.path.substring(6);
+  }
+  render(res, 'login');
 }
 
 function showPasswordReset(req, res) {
+  _showPasswordReset(req, res, _render);
+}
+function _showPasswordReset(req, res, render) {
   res.locals.resetToken = req.params.resetToken;
-  res.render('passwordreset');
+  render(res, 'passwordreset');
 }
 
 function passwordReset(req, res) {
+  _passwordReset(req, res, _render, _redirect);
+}
+function _passwordReset(req, res, render, redirect) {
   var action = req.body.action;
   switch (action) {
     case 'sendEmail':
@@ -212,13 +269,13 @@ function passwordReset(req, res) {
           if (err) {
             console.error('problem setting password reset token', err);
             res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
-            res.render('passwordreset');
+            render(res, 'passwordreset');
           } else {
             if (result.rowCount) {
               emailHelper.sendPasswordReset({email: email, name: email, resetToken: resetToken});
             }
             res.locals.messages.push('If an account with your email exists, you will receive an email shortly with instuctions to reset your password.');
-            res.render('passwordreset');
+            render(res, 'passwordreset');
           }
         });
       });
@@ -229,12 +286,12 @@ function passwordReset(req, res) {
       if (!resetToken) {
         res.locals.errors.push('Sorry, we couldn\'t reset your password. Please request a new email and try again.');
         req.params.resetToken = resetToken;
-        return showPasswordReset(req, res);
+        return _showPasswordReset(req, res, render);
       }
       if (!(newPassword && newPassword.length >= 8)) {
         res.locals.errors.push('Please choose a password that\'s at least 8 characters.');
         req.params.resetToken = resetToken;
-        return showPasswordReset(req, res);
+        return _showPasswordReset(req, res, render);
       }
       hashNewPassword(newPassword, function(err, passwordStuff) {
         myUtils.getDbClient(res, function(client, done) {
@@ -243,14 +300,14 @@ function passwordReset(req, res) {
             if (err) {
               console.error('problem resetting password', err);
               res.locals.errors.push('Sorry, we couldn\'t reset your password. Please request a new email and try again.');
-              res.render('passwordreset');
+              render(res, 'passwordreset');
             } else {
               if (result.rowCount) {
                 req.flash('message', 'Your password has been reset.');
-                res.redirect('/login');
+                redirect(res, '/login');
               } else {
                 res.locals.errors.push('Sorry, we couldn\'t reset your password. Please request a new email and try again.');
-                res.render('passwordreset');
+                render(res, 'passwordreset');
               }
             }
           });
@@ -259,19 +316,22 @@ function passwordReset(req, res) {
       break;
     default:
       res.locals.warnings.push('What on earth are you doing?');
-      res.render('passwordreset');
+      render(res, 'passwordreset');
       break;
   }
 }
 
 function myBooks(req, res) {
+  _myBooks(req, res, _render);
+}
+function _myBooks(req, res, render) {
   var email = req.user.email;
   myUtils.getDbClient(res, function(client, done) {
     client.query('select * from bookList where email = $1 order by ownership', [email], function(err, result) {
       if (err) {
         done();
         res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
-        res.render('myBooks');
+        render(res, 'myBooks');
       } else {
         var isbns = _.pluck(result.rows, 'isbn');
         async.parallel([
@@ -295,9 +355,10 @@ function myBooks(req, res) {
             if (err) {
               console.error('error getting my books',err);
               res.locals.errors.push('Sorry, we couldn\'t get your books right now. Please try again later');
-              res.render('myBooks');
+              render(res, 'myBooks');
             } else {
-              res.render('myBooks', {books: results[1], school: {name: results[0].name, textbookLookupUrl: results[0].textbooklookupurl}});
+              var po = req.body&&req.body.newBookOwnership;
+              render(res, 'myBooks', {books: results[1], school: {name: results[0].name, textbookLookupUrl: results[0].textbooklookupurl}, previousOwnership:po});
             }
           }
         );
@@ -307,6 +368,9 @@ function myBooks(req, res) {
 }
 
 function addBooks(req, res) {
+  _addBooks(req, res, _render);
+}
+function _addBooks(req, res, render) {
   var action = req.body.action;
   var isbn = req.body.isbn && req.body.isbn.replace(/-/g,'').trim();
   if (action === 'addBook') {
@@ -318,11 +382,12 @@ function addBooks(req, res) {
         isbn = util.format("978%s%d", isbn.substring(0, 9), checkDig);
       } else {
         res.locals.errors.push('Sorry, that is not a valid ISBN. Please provide an ISBN 10 or 13 number.');
-        return myBooks(req, res);
+        return _myBooks(req, res, render);
       }
     }
     if (!(ownership === 'own' || ownership === 'selling' || ownership === 'buying')) {
-      return res.send('not a valid ownership');
+      res.locals.errors.push('Ownership must be one of \'own\', \'selling\', or \'buying\'');
+      return render(res, 'not a valid ownership');
     }
     myUtils.getDbClient(function(err) {
       res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
@@ -334,7 +399,7 @@ function addBooks(req, res) {
           console.error('problem adding new book', err);
           res.locals.errors.push('That didn\'t quite work. Make sure you haven\'t already added that book to your list');
         }
-        myBooks(req, res);
+        _myBooks(req, res, render);
       });
     });
   } else if (action === 'modifyBook') {
@@ -342,7 +407,7 @@ function addBooks(req, res) {
     if (ownership === 'remove') {
       myUtils.getDbClient(function(err) {
         res.locals.errors.push('Sorry, we couldn\'t remove that book. Please try again');
-        return myBooks(req, res);
+        return _myBooks(req, res, render);
       }, function(client, done) {
         client.query('delete from bookList where email=$1 and isbn=$2', [req.user.email, isbn], function(err, result) {
           done();
@@ -350,13 +415,13 @@ function addBooks(req, res) {
             console.error('problem removing book', err);
             res.locals.errors.push('Sorry, we couldn\'t remove that book. Please try again');
           }
-          myBooks(req, res);
+          _myBooks(req, res, render);
         });
       });
     } else {
       myUtils.getDbClient(function(err) {
         res.locals.errors.push('Sorry, we couldn\'t update that book. Please try again.');
-        return myBooks(req, res);
+        return _myBooks(req, res, render);
       }, function(client, done) {
         client.query('update bookList set ownership=$1 where email=$2 and isbn=$3', [ownership, req.user.email, isbn], function(err, result) {
           done();
@@ -364,7 +429,7 @@ function addBooks(req, res) {
             console.error('problem updating book', err);
             res.locals.errors.push('Sorry, we couldn\'t update that book. Please try again.');
           }
-          myBooks(req, res);
+          _myBooks(req, res, render);
         });
       });
     }
@@ -372,7 +437,7 @@ function addBooks(req, res) {
     var newTextbookLookupUrl = req.body.textbookLookupUrl;
     myUtils.getDbClient(function(err) {
       res.locals.errors.push('Sorry, we couldn\'t add your school\'s textbook lookup page. Please try again later.');
-      return myBooks(req, res);
+      return _myBooks(req, res, render);
     }, function(client, done) {
       client.query('update schools set textbooklookupurl=$1 from students where students.email = $2 and students.schoolid = schools.schoolid', [newTextbookLookupUrl, req.user.email], function(err, result) {
         done();
@@ -380,13 +445,16 @@ function addBooks(req, res) {
           console.error('problem updating schools textbook lookup url');
           res.locals.errors.push('Sorry, we couldn\'t add your school\'s textbook lookup page. Please try again later.');
         }
-        return myBooks(req, res);
+        return _myBooks(req, res, render);
       });
     });
   }
 }
 
 function importBooks(req, res) {
+  _importBooks(req, res, _render, _redirect);
+}
+function _importBooks(req, res, render, redirect) {
   var isbns;
   if (req.body.isbns) {
     isbns = JSON.parse(req.body.isbns);
@@ -396,9 +464,9 @@ function importBooks(req, res) {
   if (!(isbns && isbns.length)) {
     req.flash('message', 'You don\'t have any books to import.');
     if (req.user) {
-      res.redirect('/mybooks');
+      redirect(res, '/mybooks');
     } else {
-      res.redirect('/');
+      redirect(res, '/');
     }
     return;
   }
@@ -416,7 +484,7 @@ function importBooks(req, res) {
   if (req.user) {
     myUtils.getDbClient(function(err) {
       req.flash('error', ['Sorry, we\'re having problems with our website right now. Please try that again soon.']);
-      res.redirect('/mybooks');
+      redirect(res, '/mybooks');
     }, function(client, done) {
       async.each(importIsbns, function(isbn, callback) {
         client.query('insert into bookList values ($1, $2, $3)', [req.user.email, isbn, 'buying'], function(err, result) {
@@ -437,20 +505,23 @@ function importBooks(req, res) {
           }
           req.flash('message', '%d books were successfully imported!', (importIsbns.length-problems.length));
         }
-        res.redirect('/mybooks');
+        redirect(res, '/mybooks');
       });
     });
   } else {
     res.cookie('import-books', { isbns:importIsbns, time:new Date() });
     req.flash('message', 'Please log in so we can add your books to your Book List!');
-    res.redirect('/login/import');
+    redirect(res, '/login/import');
   }
 }
 
 function findBooks(req, res) {
+  _findBooks(req, res, _render);
+}
+function _findBooks(req, res, render) {
   myUtils.getDbClient(function(err) {
     res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
-    res.render('findBooks');
+    render(res, 'findBooks');
   }, function(client, done) {
     async.parallel([
       function(callback) {
@@ -487,14 +558,14 @@ function findBooks(req, res) {
         if (err) {
           console.error('error finding books',err);
           res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
-          res.render('findBooks');
+          render(res, 'findBooks');
         } else {
           for (var i = 0; i < results[1].length; i++) {
             // copy over the number of sellers for each book
             results[1][i].numSellers = results[0][results[1][i].isbn] || 0;
           }
           var sortedBooks = _.sortBy(results[1], function(book) { return -book.numSellers; });
-          res.render('findBooks', { books: results[1] });
+          render(res, 'findBooks', { books: results[1] });
         }
       }
     );
@@ -502,6 +573,9 @@ function findBooks(req, res) {
 }
 
 function foundBook(req, res) {
+  _foundBook(req, res, _render);
+}
+function _foundBook(req, res, render) {
   var action = req.body.action;
   var isbn = req.body.isbn;
   switch(action) {
@@ -509,7 +583,7 @@ function foundBook(req, res) {
       var message = escape(req.body.message);
       myUtils.getDbClient(function(err) {
         res.locals.errors.push('Sorry, we\'re having some problems with the website right now. Please try again soon.');
-        findBooks(req, res);
+        _findBooks(req, res, render);
       }, function(client, done) {
         client.query('select students.name,students.email from bookList,students where bookList.ownership = \'selling\' and bookList.email = students.email and students.schoolId = $2 and emailConfirmed and bookList.isbn = $1', [isbn, req.user.schoolid], function(err, result) {
           done();
@@ -525,7 +599,7 @@ function foundBook(req, res) {
             bookHelper.getBookInfo(isbn, function(err, book) {
               if (err) {
                 res.locals.errors.push('Sorry, we\'re having trouble finding that book. Make sure you have a valid ISBN and please try again soon.');
-                return findBooks(req, res);
+                return _findBooks(req, res, render);
               }
               emailHelper.sendBookInquiryEmail({
                 toPeople: toPeople,
@@ -539,12 +613,12 @@ function foundBook(req, res) {
               }, function(err) {
                 console.error('error sending inquiry email', err);
                 res.locals.errors.push('Sorry, there was a problem sending your email. Please try again soon.');
-                findBooks(req, res);
+                _findBooks(req, res, render);
               });
             });
           } else {
             res.locals.errors.push('Sorry, no one is selling that book!');
-            findBooks(req, res);
+            _findBooks(req, res, render);
           }
         });
       });
@@ -564,4 +638,17 @@ module.exports.findBooks = findBooks;
 module.exports.foundBook = foundBook;
 module.exports.passwordReset = passwordReset;
 module.exports.showPasswordReset = showPasswordReset;
-module.exports.import = importBooks;
+module.exports.importBooks = importBooks;
+
+module.exports._getAccount = _getAccount;
+module.exports._login = _login;
+module.exports._join = _join;
+module.exports._confirmEmail = _confirmEmail;
+module.exports._createAccount = _createAccount;
+module.exports._myBooks = _myBooks;
+module.exports._addBooks = _addBooks;
+module.exports._findBooks = _findBooks;
+module.exports._foundBook = _foundBook;
+module.exports._passwordReset = _passwordReset;
+module.exports._showPasswordReset = _showPasswordReset;
+module.exports._importBooks = _importBooks;
