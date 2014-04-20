@@ -11,9 +11,18 @@ block content
             input.form-control.focus-me(type='text', name='isbn', id='newBookIsbn', placeholder='Book ISBN Number')
             br
             select.form-control(name='newBookOwnership')
-              option(value='buying') I want to buy this book
-              option(value='selling') I want to sell this book
-              option(value='own') I own this book (not selling or buying)
+              if !previousOwnership || previousOwnership === 'buying'
+                option(value='buying', selected) I want to buy this book
+              else
+                option(value='buying') I want to buy this book
+              if previousOwnership && previousOwnership === 'selling'
+                option(value='selling', selected) I want to sell this book
+              else
+                option(value='selling') I want to sell this book
+              if previousOwnership && previousOwnership === 'own'
+                option(value='own', selected) I own this book (not selling or buying)
+              else
+                option(value='own') I own this book (not selling or buying)
             br
             button.form-control.btn.btn-success(type='submit', name='submit') Add Book
         .col-md-6
@@ -46,8 +55,10 @@ block content
   .row
     if books && books.length
       - var lastBookOwnership;
-      each book in books
+      - var numInThisRow = 0;
+      each book,i in books
         if lastBookOwnership !== book.ownership
+          - numInThisRow = 0;
           .container.col-sm-12
             br
             hr
@@ -58,36 +69,43 @@ block content
                 h2.text-center-xs Books You're Selling
               when 'buying'
                 h2.text-center-xs Books You're Buying
+            hr
           - lastBookOwnership = book.ownership
-        .col-xs-12.col-sm-6
-          .col-md-4.col-sm-6.col-xs-12.text-center
+        else
+          - numInThisRow++;
+        div(class=numInThisRow%2===1?'row':'')
+          .col-xs-12.col-sm-6
             if book.image
-              img.img-rounded(src='#{book.image}')
-          .col-md-8.col-sm-6.col-xs-12
-            .row.text-center-xs
-              .title
-                h4 #{book.title}
-                p by #{book.authors}
-                p ISBN: #{book.isbn}
-            .row
-                form(action='/mybooks', role='form', method='post')
-                  input(type='hidden', name='_csrf', value=csrfToken)
-                  input(type='hidden', name='action', value='modifyBook')
-                  input(type='hidden', name='isbn', value=book.isbn)
-                  if book.ownership !== 'own'
-                    .col-sm-12.col-xs-4
-                      button.btn.btn-default.btn-block(type='submit', name='own', value='own') Own
-                  if book.ownership !== 'selling'
-                    .col-sm-12.col-xs-4
-                      button.btn.btn-default.btn-block(type='submit', name='selling', value='selling') Selling
-                  if book.ownership !== 'buying'
-                    .col-sm-12.col-xs-4
-                      button.btn.btn-default.btn-block(type='submit', name='buying', value='buying') Buying
-                  .col-sm-12.col-xs-4
-                    br.hidden-xs
-                    button.btn.btn-danger.btn-block(type='submit', name='remove', value='remove') Remove
-      br
-      br
-      br
+             .col-md-4.col-sm-6.col-xs-12.text-center.visible-xs
+               img.img-rounded(src='#{book.image}')
+            .col-xs-12(class=book.image?'col-md-8 col-sm-6':'col-md-12 col-sm-12')
+              .row.text-center-xs
+                .title
+                  h4 #{book.title}
+                  p by #{book.authors}
+                  p ISBN: #{book.isbn}
+              .row
+                  form(action='/mybooks', role='form', method='post')
+                    input(type='hidden', name='_csrf', value=csrfToken)
+                    input(type='hidden', name='action', value='modifyBook')
+                    input(type='hidden', name='isbn', value=book.isbn)
+                    if book.ownership !== 'own'
+                      .col-xs-4(class=book.image?'col-md-12 col-sm-12':'col-md-8 col-sm-6')
+                        button.btn.btn-default.btn-block(type='submit', name='own', value='own') Own
+                    if book.ownership !== 'selling'
+                      .col-xs-4(class=book.image?'col-md-12 col-sm-12':'col-md-8 col-sm-6')
+                        button.btn.btn-default.btn-block(type='submit', name='selling', value='selling') Selling
+                    if book.ownership !== 'buying'
+                      .col-xs-4(class=book.image?'col-md-12 col-sm-12':'col-md-8 col-sm-6')
+                        button.btn.btn-default.btn-block(type='submit', name='buying', value='buying') Buying
+                    .col-xs-4(class=book.image?'col-md-12 col-sm-12':'col-md-8 col-sm-6')
+                      br.hidden-xs
+                      button.btn.btn-danger.btn-block(type='submit', name='remove', value='remove') Remove
+                      br.visible-xs
+            if book.image
+             .col-md-4.col-sm-6.col-xs-12.text-center.hidden-xs
+               img.img-rounded(src='#{book.image}')
+        if numInThisRow%2===1
+          hr
     else
       h3 You don't have any books yet. Please add some books!
