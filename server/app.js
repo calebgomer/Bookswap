@@ -19,6 +19,7 @@ var myUtils = require('./myUtils');
 var Mandrill = require('mandrill-api/mandrill');
 var m = new Mandrill.Mandrill();
 
+// configure Express settings
 app.configure(function() {
   app.set('views', __dirname + '/views');
   app.use(express.static(path.join(__dirname, 'public')));
@@ -32,9 +33,11 @@ app.configure(function() {
   app.use(passport.session());
   app.use(flash());
   app.use(function (req, res, next) {
+    // put CSRF tokens in every response
     if (req.url !== '/import') {
       res.locals.csrfToken = req.csrfToken();
     }
+    // populate common variables used in jade templates
     res.locals.path = req.path;
     res.locals.user = req.user;
     res.locals.errors = req.flash('error');
@@ -48,6 +51,7 @@ app.configure(function() {
   app.use(app.router);
 });
 
+// make sure all requests are using encryption
 app.configure('production', function() {
   app.all('*', function(req, res, next) {
     if (req.secure || (process.env.HEROKU && req.headers['x-forwarded-proto'] === 'https')) {
@@ -62,6 +66,7 @@ app.configure('development', function() {
   app.use(express.logger('dev'));
 })
 
+// listen on the correct port, depending on server configuration and environment
 if (process.env.HEROKU || process.env.NODE_ENV === 'development') {
   app.listen(process.env.PORT || 3000);
 } else {
@@ -72,6 +77,7 @@ if (process.env.HEROKU || process.env.NODE_ENV === 'development') {
   https.createServer(credentials, app).listen(process.env.SECURE_PORT || 3001);
 }
 
+// render the home page
 app.get('/', function(req, res) {
   res.render('home');
 });
@@ -105,7 +111,7 @@ app.post('/import', controller.importBooks);
 app.get('/admin', loggedIn, ensureAdmin, admin.dashboard);
 app.post('/admin', loggedIn, ensureAdmin, admin.dashboard);
 
-// setup passport
+// setup passport for local logins
 passport.use(new LocalLoginStrategy({usernameField:'email'},
   function(email, password, done) {
     controller.authenticateUser(email, password, function(err, user) {
@@ -118,10 +124,12 @@ passport.use(new LocalLoginStrategy({usernameField:'email'},
   }
 ));
 
+// store user email for quick lookup later
 passport.serializeUser(function(user, done) {
   done(null, user.email);
 });
 
+// use stored email to look up the rest of the user's info
 passport.deserializeUser(function(email, done) {
   myUtils.getDbClient(function(err) {
     return done(err);
@@ -169,6 +177,8 @@ function ensureAdmin(req, res, next) {
   res.redirect('/');
 }
 
+// middleware to make sure the import page doesn't require CSRF
+// since the request is coming from another location it doesn't have a token
 function customCsrf(req, res, next) {
   if (req.url === '/import') {
     next();

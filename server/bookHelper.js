@@ -1,3 +1,5 @@
+// handy book tools
+
 var https = require('https');
 var http = require('http');
 var _ = require("underscore");
@@ -18,14 +20,17 @@ mongo.Db.connect(process.env.MONGOHQ_URL, function(err, db) {
   });
 });
 
+// query google with isbn
 var makeGoogleIsbnQuery = function(isbn, callback) {
   makeGoogleQuery(true, isbn, callback);
 };
 
+// query google with book search text
 var makeGoogleBookQuery = function(searchText, callback) {
   makeGoogleQuery(false, searchText, callback);
 };
 
+// generic google books api query
 var makeGoogleQuery = function(searchIsbn, searchText, callback) {
   var gQuery = '/books/v1/volumes?q=%s&maxResults=%s&printType=books&country=us&key=%s&fields=items(volumeInfo/title,volumeInfo/subtitle,volumeInfo/authors,volumeInfo/imageLinks,saleInfo)';
   var query;
@@ -63,6 +68,7 @@ var makeGoogleQuery = function(searchIsbn, searchText, callback) {
   });
 };
 
+// query amazon for book information from an isbn
 var makeAmazonQuery = function(isbn, callback) {
   var aQuery = '';
   aQuery += 'AWSAccessKeyId='+AWS_Access_Key_ID;
@@ -107,6 +113,8 @@ var makeAmazonQuery = function(isbn, callback) {
   });
 };
 
+// gets book info from both cache if available
+// hits amazon and google for book info if cached data is not available
 function getBookInfo(isbn, callback) {
   booksData.find({'isbn':isbn}).toArray(function(err, items) {
     if (items.length) {
@@ -183,6 +191,8 @@ function getBookInfo(isbn, callback) {
   });
 }
 
+// converts isbn 10 numbers to 13 ones
+// all books are stored in the isbn 13 format for consistency
 function convertIsbn10to13(isbn, callback) {
   var sum = 38 + 3 * (parseInt(isbn[0]) + parseInt(isbn[2]) + parseInt(isbn[4]) + parseInt(isbn[6]) + parseInt(isbn[8])) + parseInt(isbn[1]) + parseInt(isbn[3]) + parseInt(isbn[5]) + parseInt(isbn[7]);
   var checkDig = (10 - (sum % 10)) % 10;

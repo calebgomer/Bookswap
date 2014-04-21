@@ -1,3 +1,5 @@
+// takes the schema.json file and makes the database schema
+
 var pg = require('pg');
 var _ = require('underscore');
 var util = require('util');

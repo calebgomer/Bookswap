@@ -1,3 +1,5 @@
+// inserts some mock data
+
 var async = require('async');
 var myUtils = require('../myUtils');
 

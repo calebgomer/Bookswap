@@ -1,3 +1,5 @@
+// test the most important email functions
+
 var should = require('should');
 var sinon = require('sinon');
 var rewire = require('rewire');

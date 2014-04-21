@@ -1,3 +1,5 @@
+// controller to direct user traffic
+
 var validator = require('validator');
 var myUtils = require('./myUtils');
 var util = require('util');
@@ -37,6 +39,7 @@ function _redirect(res, path) {
   }
 }
 
+// show new user join page
 function join(req, res) {
   _join(req, res, _render);
 }
@@ -44,6 +47,8 @@ function _join(req, res, render) {
   render(res, 'join');
 }
 
+// create new user account
+// creates new schools if user is first from their school
 function createAccount(req, res) {
   _createAccount(req, res, _render);
 }
@@ -127,6 +132,7 @@ function _createAccount(req, res, render) {
   });
 }
 
+// authenticates a user's email and password
 function authenticateUser(email, password, callback) {
   myUtils.getDbClient(function(err) {
     console.error('auth error', err);
@@ -168,6 +174,7 @@ function authenticateUser(email, password, callback) {
   });
 }
 
+// hashes a password with default parameters and new salt
 function hashNewPassword(password, callback) {
   var keylen = process.env.HASH_KEYLEN || 16;
   saltShaker(keylen, function(err, salt) {
@@ -179,22 +186,26 @@ function hashNewPassword(password, callback) {
   });
 }
 
+// gets some random bytes for password salt
 function saltShaker(keylen, callback) {
   crypto.randomBytes(keylen, callback);
 }
 
+// hashes password with a specific salt
 function hashPassword(password, salt, callback) {
   var iterations = process.env.HASH_ITERATION || 200000;
   var keylen = process.env.HASH_KEYLEN || 16;
   hashPasswordWithIterationsAndKeylen(password, salt, iterations, keylen, callback);
 }
 
+// hashes password with a specific salt, number of iterations, and key length
 function hashPasswordWithIterationsAndKeylen(password, salt, iterations, keylen, callback) {
   crypto.pbkdf2(password, salt, iterations, keylen, function(err, key) {
     callback(err, {salt:salt, iterations:iterations, keylen:keylen, key:key});
   });
 }
 
+// processes email confirmation requests
 function confirmEmail(req, res) {
   _confirmEmail(req, res, _redirect);
 }
@@ -212,6 +223,7 @@ function _confirmEmail(req, res, redirect) {
   });
 }
 
+// renders user's account page and handles confirmation email resending
 function getAccount(req, res) {
   _getAccount(req, res, _render);
 }
@@ -235,6 +247,7 @@ function _getAccount(req, res, render) {
   }
 }
 
+// displays login page
 function login(req, res) {
   _login(req, res, _render);
 }
@@ -246,6 +259,7 @@ function _login(req, res, render) {
   render(res, 'login');
 }
 
+// displays password reset page
 function showPasswordReset(req, res) {
   _showPasswordReset(req, res, _render);
 }
@@ -254,6 +268,7 @@ function _showPasswordReset(req, res, render) {
   render(res, 'passwordreset');
 }
 
+// sends password reset emails and resets passwords
 function passwordReset(req, res) {
   _passwordReset(req, res, _render, _redirect);
 }
@@ -321,6 +336,7 @@ function _passwordReset(req, res, render, redirect) {
   }
 }
 
+// displays user's book page
 function myBooks(req, res) {
   _myBooks(req, res, _render);
 }
@@ -367,6 +383,7 @@ function _myBooks(req, res, render) {
   });
 }
 
+// adds books to user's lists
 function addBooks(req, res) {
   _addBooks(req, res, _render);
 }
@@ -451,6 +468,7 @@ function _addBooks(req, res, render) {
   }
 }
 
+// imports books from various websites using the bookmarklet
 function importBooks(req, res) {
   _importBooks(req, res, _render, _redirect);
 }
@@ -515,6 +533,7 @@ function _importBooks(req, res, render, redirect) {
   }
 }
 
+// shows online book links and matches users with each other
 function findBooks(req, res) {
   _findBooks(req, res, _render);
 }
@@ -572,6 +591,7 @@ function _findBooks(req, res, render) {
   });
 }
 
+// send an email to book sellers
 function foundBook(req, res) {
   _foundBook(req, res, _render);
 }

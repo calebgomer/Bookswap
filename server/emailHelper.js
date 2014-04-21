@@ -1,8 +1,11 @@
+// handy email tools
+
 var Mandrill = require('mandrill-api/mandrill');
 var m = new Mandrill.Mandrill();
 var myUtils = require('./myUtils');
 var util = require('util');
 
+// finally sends a raw email
 function actuallySendEmail(send, callback) {
   m.messages.send(send, function(err, result) {
     if (callback) {
@@ -11,6 +14,7 @@ function actuallySendEmail(send, callback) {
   });
 }
 
+// takes email parameters and makes the mandrill email object
 function sendEmail(arguments, callback) {
   if (!arguments) {
     return callback && callback('Please provide arguments');
@@ -65,9 +69,9 @@ function sendEmail(arguments, callback) {
   actuallySendEmail(send, callback);
 }
 
+// sends a confirmation email to new users
 var confirmationEmailText = 'Hi %s,\nThank you for signing up for Book Swap! To confirm your email address, please click the following link. Copy and paste it into the address bar if clicking it does not work.\n\n%s/confirm/%s\n\nThanks,\n%s';
 var confirmationEmailHtml = '<p>Hi %s,</p><p>Thank you for signing up for Book Swap! To confirm your email address, please click the following link. Copy and paste it into the address bar if clicking it does not work.</p><p>%s/confirm/%s</p><p>Thanks,<br>%s</p>';
-
 function sendNewEmailConfirmation(arguments, callback) {
   if (!(arguments && arguments.email && arguments.name)) {
     return callback && callback('Please provide an email and name');
@@ -88,9 +92,9 @@ function sendNewEmailConfirmation(arguments, callback) {
   sendEmail({toPeople: toPeople, subject: subject, html: emailHtml, text: emailText}, callback);
 }
 
+// sends a password reset email
 var passwordResetEmailText = 'Hi %s,\nIt looks like you made a request to reset your Book Swap password. To complete the process, please click the following link and choose a new password.\n\n%s/passwordreset/%s\n\nIf you did not request to reset your password please ignore this email and your password reset token will invalidate soon.\n\nThanks,\n%s';
 var passwordResetEmailHtml = '<p>Hi %s,</p><p>It looks like you made a request to reset your Book Swap password. To complete the process, please click the following link and choose a new password.</p><p>%s/passwordreset/%s</p><p>If you did not request to reset your password please ignore this email and your password reset token will invalidate soon.</p><p>Thanks,<br>%s</p>';
-
 function sendPasswordReset(arguments, callback) {
   if (!(arguments && arguments.email && arguments.name)) {
     return callback && callback('Please provide an email and name');
@@ -111,9 +115,9 @@ function sendPasswordReset(arguments, callback) {
   sendEmail({toPeople: toPeople, subject: subject, html: emailHtml, text: emailText}, callback);
 }
 
+// sends an email from buyer to sellers about a book
 var bookInquiryEmailText = 'Hi Book Swap Seller,\nI am interested in your copy of "%s" (ISBN: %s).\n%s\n\nThanks!\n%s (%s)\n\nJust like on Craigslist, remember to beware of scams and to be safe.\nhttp://www.craigslist.org/about/scams\nhttp://www.craigslist.org/about/safety';
 var bookInquiryEmailHtml = '<p>Hi Book Swap Seller,</p><p>I am interested in your copy of "%s" (ISBN: %s).</p><p>%s</p><p>Thanks!</p><p>%s (%s)</p><h4>Just like on Craigslist, remember to beware of <a href="http://www.craigslist.org/about/scams">scams</a> and to be <a href="http://www.craigslist.org/about/safety">safe</a>.</h4>';
-
 function sendBookInquiryEmail(arguments, callback) {
   var toPeople = arguments.toPeople;
   if (!(toPeople && toPeople.length)) {

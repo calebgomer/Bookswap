@@ -1,6 +1,9 @@
+// generally handy tools
+
 var pg = require('pg');
 var uuid = require('node-uuid');
 
+// returns a database client from the client pool
 function getDbClient(fail, success) {
   pg.connect(process.env.DATABASE_URL, function(err, client, done) {
     if (err) {
@@ -15,10 +18,12 @@ function getDbClient(fail, success) {
   });
 }
 
+// ends the connection to the database
 function endDbConnection() {
   pg.end();
 }
 
+// generates a new UUID for various purposes
 function newUUID() {
   return uuid.v4();
 }

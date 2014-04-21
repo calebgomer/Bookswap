@@ -1,5 +1,8 @@
+// user account tools
+
 var myUtils = require('./myUtils');
 
+// handle user requests from confirmation email link
 function confirmEmail(confirmationId, callback) {
   myUtils.getDbClient(function(err) {
     return callback('Our site is having issues, please try again.');

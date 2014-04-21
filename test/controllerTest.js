@@ -1,3 +1,5 @@
+// test the most important controller functions
+
 var util = require('util');
 var should = require('should');
 var sinon = require('sinon');
